@@ -554,3 +554,213 @@ For the record, in case any of this looks tempting on a second read:
 ### TL;DR
 
 Steal three patterns (data-driven paytable shape, debug-mode concept, file-per-concern). Reject everything else. The repo is worth ~30 minutes of "what to copy" inspection and then close the tab.
+
+---
+
+## 16. What to take from `js-slots-cra` (Mariana Costa)
+
+The `resource-projects/js-slots-cra/` subfolder is a near-production React + TypeScript + Redux + GSAP slot. Far stronger reference than KseniiaPrytkova. Layout is 5×3 with 9 paylines, exactly matching the IGT brief. Win evaluation, paylines, and symbol data are all done well; the spin animation is GSAP-tweened with proper easing.
+
+But it has one fatal gap for your purposes: **no mock-server boundary**. The RNG and `getScreenResult` are called inside React component callbacks. The brief explicitly requires a separated server module — this repo doesn't have one. Borrow the algorithms, leave the architecture.
+
+### 16.1 Take: `SYMBOLS_METADATA` shape (paytable as config)
+
+In `src/game-configs.ts`, each symbol is described once:
+
+```typescript
+[SymbolType.PIXIJS]: {
+  type: SymbolType.PIXIJS,
+  icon: PixijsSvg,
+  frequency: 2,                  // copies per reel
+  winFactor: WIN_FACTORS.HIGH,   // [3-match, 4-match, 5-match] payout multipliers
+},
+```
+
+Three things this does right:
+- `frequency` controls reel composition. To rebalance RTP, change a single number.
+- `winFactor: [x3, x4, x5]` covers 3-of-a-kind, 4-of-a-kind, and 5-of-a-kind payouts in one array. No separate rules for "left 3", "left 4", "left 5" — the index does the work.
+- Reusable preset constants (`WIN_FACTORS.VERY_LOW`, `LOW`, `MEDIUM`, `HIGH`, `VERY_HIGH`) keep the payout curve consistent and tunable.
+
+Adopt this exact shape in your `config/symbols.ts`. It's a strict improvement on the KseniiaPrytkova `{line, sequence, points}` flat list.
+
+### 16.2 Take: `PAY_LINES_METADATA` shape (paylines as position arrays)
+
+```typescript
+[PayLineType.PL_4]: {
+  type: PayLineType.PL_4,
+  color: Color.PINK,
+  positions: [
+    { reel: 0, row: 0 },
+    { reel: 1, row: 1 },
+    { reel: 2, row: 2 },
+    { reel: 3, row: 1 },
+    { reel: 4, row: 0 },
+  ],
+},
+```
+
+Each payline is an ordered array of `{reel, row}` positions. The evaluator walks the array left-to-right counting consecutive matches. Adding a 10th payline = one config entry, zero code changes. Use this verbatim.
+
+### 16.3 Take: `getPayLineResult` algorithm (win evaluator with wildcard look-back)
+
+In `src/game-utils.ts`. For each payline:
+
+1. Walk positions left-to-right.
+2. Track `currentSymbolType`, `numberOfSymbolsInLine`, `initialPositionIndex`.
+3. On a mismatch:
+   - If we already have ≥ MIN_MATCH (3) of a symbol, the run is locked in — break.
+   - Otherwise, check if the previous symbol was a wildcard. If so, restart counting from the wildcard's position (the wildcard "becomes" the new symbol).
+4. On a match, increment count. If `currentSymbolType` is wildcard, upgrade to the concrete symbol.
+
+The clever bit: the wildcard isn't greedily assumed to be any symbol — it's only resolved when a concrete symbol next to it tells us what to interpret it as. That's the correct behavior for "highest pays" prioritization with wilds.
+
+Lift this algorithm into your `server/evaluator.ts`. Adapt the return type to include the cell positions for highlighting (your JSON schema in §9 needs `positions` per win).
+
+### 16.4 Take: `SlotScreenResult` return shape
+
+```typescript
+type SlotScreenResult = {
+  winAmount: number;
+  freeSpins: number;
+  bonusFactor: number;
+  winPayLines: PayLine[];
+};
+```
+
+A single object summarizes everything that happened on the spin. Almost identical to your §9 mock-server JSON schema. Adopt and extend with `reelStops`, `window`, and `newBalance` to make it a complete server response.
+
+### 16.5 Take: GSAP wrap-tween for the spin animation
+
+In `src/components/game/Reel/index.tsx`:
+
+```typescript
+const wrap = gsap.utils.wrap(wrapOffsetTop, wrapOffsetBottom);
+gsap.to(reelSelector(`#symbol-${reelIndex}`), {
+  duration: animationDuration,
+  y: `+=${reelHeight}`,
+  ease: 'power1.in',
+  paused: true,
+  modifiers: { y: gsap.utils.unitize(wrap) },
+  onComplete: onSpinningAnimationEnd,
+});
+```
+
+What this does: translates the reel's symbols downward by exactly one full reel height, with each symbol wrapping back to the top via the `wrap` modifier when it exits the bottom. `ease: 'power1.in'` gives the spin a natural acceleration into the cruise phase. `onComplete` fires when the reel settles.
+
+For PixiJS, the same idea translates directly — `gsap` has a PixiJS plugin, or use Tween.js / PixiJS's built-in `Ticker` with a manually-computed easing curve. The architectural pattern (one tween per reel, `onComplete` callback chain, wrap modifier for endless loop appearance) is what matters.
+
+For the bounce/settle the brief asks for, change the ease to a two-stage tween: `power2.out` to decelerate, then a small `back.out(1.4)` overshoot-and-return at the end. (See §16.10 for the "jump at end" bug fix.)
+
+### 16.6 Take: reel composition by frequency
+
+In `getShuffledReels`:
+
+```typescript
+const symbolsArray = Object.values(SYMBOLS_METADATA).reduce(
+  (acc, sym) => acc.concat(Array(sym.frequency).fill(sym)),
+  []
+);
+return shuffleArray(symbolsArray);
+```
+
+For each reel, push N copies of each symbol where N = symbol's `frequency`, then Fisher-Yates shuffle. Result: a reelstrip whose composition exactly matches the configured frequencies. Repeat for all 5 reels.
+
+This is the missing piece that KseniiaPrytkova lacked entirely. Use it.
+
+### 16.7 Take: file-per-concern layout
+
+Map the relevant pieces of their structure onto yours:
+
+| Their file | Their role | Your file (§10 layout) |
+|---|---|---|
+| `game-configs.ts` | All static data (symbols, paylines, constants) | `config/symbols.ts`, `config/paylines.ts`, `config/constants.ts` |
+| `game-utils.ts` | All pure game logic | `server/evaluator.ts`, `server/reelBuilder.ts` |
+| `SlotMachine/index.tsx` | Orchestration | `game/Game.ts` |
+| `Reel/index.tsx` | Single-reel animation | `game/Reel.ts` |
+| `Reels/index.tsx` | Multi-reel orchestration | `game/ReelSet.ts` |
+| `Controllers/index.tsx` | Bet + spin UI | `game/Controllers.ts` |
+
+### 16.8 Take: tests exist
+
+`App.test.tsx` and a Cypress integration spec in `cypress/integration/slot-machine.spec.tsx`. Even a single Jest test of your win evaluator (input: a forced window, output: expected wins) is a differentiator in the IGT submission. They'll notice.
+
+### 16.9 Do NOT take
+
+- **Redux, Redux persistence, action types**, all the dispatch boilerplate. Overkill for a demo.
+- **i18n (`react-i18next`)**. The brief doesn't require translations.
+- **PWA / service worker / workbox dependencies**. Out of scope.
+- **The 25+ SVG icon components.** Cute, but not what's being judged.
+- **The InputNumber +/− bet UI.** The brief explicitly asks for a combo box of bet values.
+- **Loading the entire React 19 + Redux + GSAP + i18n + SCSS-modules stack** for what should be a focused PixiJS demo. Use vanilla TypeScript or a single tiny framework only if needed.
+- **Calling `getRandomNumber` and `getScreenResult` directly from React components.** This is the architectural mistake to fix — see 16.10.
+- **`shuffleArray` mutating in place.** Their implementation returns the same reference. Make yours return a new array.
+
+### 16.10 Fix this when porting: the "jump at end of spin" bug
+
+The js-slots-cra README explicitly lists this as an unsolved issue with four failed fix attempts. The root cause: the spin animation and the final symbol display are decoupled — the reel animates forever, then on `onComplete` the final symbols are spliced in. There's a visible swap.
+
+The correct approach (apply this in your demo):
+
+1. **Decide the final stop BEFORE the animation starts.** Your mock server returns `reelStops: [12, 4, 19, 7, 0]`. The client knows exactly which symbols will be visible.
+2. **Pre-render the final window at the top of the reel** (out of view).
+3. **Animate to a Y-position that lands those exact symbols in the play window.** No splice, no swap. The math: `targetY = totalSpinDistance + (stop * symbolHeight)`, then wrap modulo for visual loops.
+4. **Add a small overshoot + settle** at the end for the "bounce" the brief asks for: e.g. tween 90% of the way with `power2.out`, then a short `back.out(2)` tween for the final 10% so it overshoots by ~5px and settles.
+
+This single fix is worth pointing out in the interview — it shows you read the source, identified a documented bug, and have a clean solution.
+
+---
+
+## 17. What to take from `slot-vanilla-js` (essykings tutorial)
+
+The `resource-projects/slot-vanilla-js/` subfolder is a ~90-line tutorial-grade implementation. 3 reels × 3 rows, hardcoded $1000 balance, hardcoded $10 bet, hardcoded bet × 5 payout, two hardcoded paylines (top row and middle row). No reelstrip composition, no spin lifecycle, no bet UI, no symbol weighting, no paytable data structure. As a model for your IGT submission, it is a negative example.
+
+But it has exactly one borrowable idea, plus a useful sanity check.
+
+### 17.1 Take (cautiously): the array-rotation animation idea, as a fallback
+
+Their spin loop rotates a 6-element array each frame:
+
+```javascript
+reelStates[index].unshift(reelStates[index].pop());
+```
+
+After each rotation it re-renders the entire reel. The animation is "real" in the sense that the DOM actually changes — there is no separate visual layer.
+
+**When this matters for you:** if for some reason you can't use GSAP / PixiJS tweening (e.g. you're testing on a low-end device, or you want a fallback animation path), array rotation is a working, dependency-free spin. It's also conceptually simple to explain in the interview.
+
+**Why you should not use it by default:** rendering the whole reel every frame is wasteful. CSS/PixiJS transform-based animation is dramatically smoother. Use the GSAP-style wrap-tween from 16.5; mention the array-rotation approach in the interview only if asked about lower-tech alternatives.
+
+### 17.2 Take: the simplicity benchmark
+
+The whole file is 90 lines. If your green-marked-only implementation grows past ~600 lines, something has gone wrong — you're over-engineering. The brief specifically lists "speed, performance, motivation and independence" as evaluation criteria. Lean wins.
+
+### 17.3 Do NOT take
+
+- **3×3 layout.** Brief asks for 5×3.
+- **Hardcoded balance and bet.** Brief asks for a bet selector (combo box).
+- **Reels as 6-element arrays.** No reelstrip composition, no RTP control.
+- **Rotation-based spin** as the primary animation. Inferior to GSAP/PixiJS tweening.
+- **Win check as inline `if` statements** in `checkWin()`. Use the data-driven paytable from 16.1 + the evaluator algorithm from 16.3.
+- **Everything in one file with global variables.** Module-per-concern from 16.7.
+- **No bet UI at all.** The brief explicitly requires a bet selection component.
+- **Hardcoded payout multiplier** (`bet × 5`). Use a paytable.
+- **DOM mutation inside the win checker.** Keep the evaluator pure.
+
+### 17.4 Final synthesis: the merge
+
+Combine the best of both with your existing reference architecture:
+
+```
+Your implementation =
+   Architecture from §10 (separated server module)
+ + Config shapes from js-slots-cra (16.1, 16.2)
+ + Win evaluator algorithm from js-slots-cra (16.3)
+ + Spin animation pattern from js-slots-cra (16.5)
+   with the end-jump bug fixed per 16.10
+ + Reel composition by frequency from js-slots-cra (16.6)
+ + Debug mode from KseniiaPrytkova, cleaned up (§15.2)
+ + Tests from js-slots-cra's example (16.8)
+ + Discipline from slot-vanilla-js: stay under 600 lines for the green requirements (17.2)
+```
+
+That's the recipe. None of the three reference repos individually solves the IGT brief, but the right pieces from each, assembled on top of the §10 architecture, gets you to a submission that demonstrates everything the brief is testing for.
