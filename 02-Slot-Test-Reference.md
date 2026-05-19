@@ -445,3 +445,112 @@ Sources: Easy Vegas Returns, Easy Vegas "How to Program"; Muir Ch. 2; common sen
 "I built a 5×3 slot demo with a clean separation between a mock server module and the rendering layer. The server module owns the reel composition, paytable, RNG, and win evaluation — it has no dependency on PixiJS and could be lifted into a Node service unchanged. On each spin the client posts a bet, the server picks one random stop per reel using a weighted reelstrip, evaluates all paylines and scatters against the resulting window, and returns a JSON payload with stop indices, the win list (with cell positions for highlighting), and the new balance. The client animates the reels to their assigned stops and presents the wins. The reelstrips, paytable, and paylines are all data — swappable without code changes. I included a debug panel that lets me force a result and verify the theoretical RTP by either full-cycle iteration or a Monte Carlo run."
 
 That's the talk track. Build to it.
+
+---
+
+## 15. What to steal from the KseniiaPrytkova reference repo
+
+The `slot-machine/` subfolder in this project contains a cloned 3×3 jQuery slot from KseniiaPrytkova. As an overall reference it's not strong enough to fork (3×3 layout instead of 5×3, no reelstrip data model, RNG entangled with animation and DOM, no mock-server boundary). But three specific patterns are worth lifting into your own implementation. Each one is small but compounds the perceived maturity of your submission.
+
+### 15.1 Steal: data-driven paytable as an array of rule objects
+
+The paytable lives in `winCombinations.js` as an array of `{name, line, sequence, points}` objects:
+
+```javascript
+let data = [
+  { name: '1', line: 0,     sequence: [3, 3, 3], points: 2000 },
+  { name: '2', line: 1,     sequence: [3, 3, 3], points: 1000 },
+  { name: '4', line: 'any', sequence: [4, 4, 4], points: 150 },
+  // ...
+];
+```
+
+**Why it's worth stealing.** The paytable is data, in its own file, separate from evaluator code. Adding a new pay rule is a one-line edit — no logic changes. This is exactly the "config not code" principle from §10. Keep this shape, just upgrade it:
+
+```typescript
+// config/paytable.ts
+export type PayRule = {
+  id: string;
+  paylineId: number | 'any';   // payline index or 'any' (for scatter-like rules)
+  pattern: SymbolPattern;       // see below
+  payout: number;               // credits multiplied by bet
+};
+
+export type SymbolPattern =
+  | { kind: 'exact';  symbols: Symbol[] }                  // [A, A, A]
+  | { kind: 'anyOf';  set: Symbol[], count: number }       // 3 of any bar
+  | { kind: 'count';  symbol: Symbol, min: number };       // at least 2 cherries
+
+export const PAYTABLE: PayRule[] = [/* ... */];
+```
+
+The upgrade gives you what KseniiaPrytkova lacks: instead of enumerating all 24 permutations of `[BAR, 2xBAR, 3xBAR]` by hand (her items 9.1–9.24), one `anyOf` rule covers them all.
+
+### 15.2 Steal: the debug-mode concept (NOT the implementation)
+
+The repo includes a debug panel that lets you force the result of the next spin by picking a symbol per cell, then evaluates win logic against the forced result. This is the highest-value pattern in the whole repo.
+
+**Why it's worth stealing.**
+- It demonstrates that your win evaluator is separable from your RNG (you can drive it with arbitrary input).
+- It lets you demo specific win scenarios live in the interview (*"watch the 3-payline coinciding win"*) without praying for the RNG to cooperate.
+- It implies the same wiring you'd use for replay-on-disconnect (server log of stops + client replay).
+- It's roughly an hour of work and disproportionately impressive.
+
+**What's wrong with her implementation:** raw HTML `<table>`, nine `<select>` elements all with `id="symbols"` (invalid HTML), and `getElementsByTagName('select')` to read them. Don't copy any of this.
+
+**Clean version for your demo:**
+
+```typescript
+// game/DebugPanel.ts
+class DebugPanel {
+  private forcedStops: (number | null)[] = [null, null, null, null, null];
+
+  // Override RNG: if forced, return forced stop; else fall through
+  patch(mockServer: MockServer): void {
+    mockServer.setRngOverride((reelIndex) => this.forcedStops[reelIndex]);
+  }
+
+  setStop(reelIndex: number, stop: number | null) {
+    this.forcedStops[reelIndex] = stop;
+  }
+}
+```
+
+The mock server's `pickStop(reelIndex)` becomes:
+
+```typescript
+function pickStop(reelIndex: number): number {
+  const override = rngOverride?.(reelIndex);
+  return override ?? Math.floor(Math.random() * reels[reelIndex].length);
+}
+```
+
+Add the panel to the page as a collapsible section with five number inputs (stop index per reel) and a "Force next spin" toggle. Done.
+
+### 15.3 Steal: separated files for paytable, validation, and game
+
+The repo splits files by concern even without ES modules:
+- `index.js` — game logic
+- `winCombinations.js` — paytable data
+- `debugMode.js` — debug feature
+- `menacingMessages.js` — input validation
+
+**Why it's worth stealing.** The instinct is right: each file has one reason to change. In your TypeScript version, do the same thing properly with ES modules. The proposed structure in §10 already reflects this — `config/`, `server/`, `game/` directories with one concern per file.
+
+### 15.4 Explicitly do NOT steal
+
+For the record, in case any of this looks tempting on a second read:
+
+- **3×3 layout with rows-as-reels.** The test brief says 5×3 configurable, and reels are columns, not rows. Inverted mental model is a red flag in the interview.
+- **`Math.floor(Math.random() * arr.length)` per cell, every spin.** No reelstrip means no RTP control. Use a reelstrip array per reel and `pickStop(reel)` exactly once per reel per spin (§4).
+- **CSS shake animation as "spinning".** The brief asks for start / spin / stop / speed up / slow down / bounce — that's a real spin lifecycle with easing. PixiJS gives you tweening; use it.
+- **DOM mutation inside the win checker.** `isPayouts()` directly sets `style.background = 'red'`. Your evaluator should be pure: input = window, output = win list. The presentation layer reads the win list and decides how to render it.
+- **Global mutable state (`result`, `winRow`, `resultArr`).** Module-scoped state at most, ideally instance state on a `Game` class.
+- **jQuery.** Not needed and not appropriate for a 2026 PixiJS demo.
+- **The 24-row brute-force enumeration of bar permutations.** Reduce to a single rule with an `anyOf` predicate.
+- **Duplicate HTML IDs.** Self-explanatory.
+- **`points` input doubling as both balance and bet entry.** Use a separate `BetSelector` component with discrete bet values (the brief explicitly asks for a combo box).
+
+### TL;DR
+
+Steal three patterns (data-driven paytable shape, debug-mode concept, file-per-concern). Reject everything else. The repo is worth ~30 minutes of "what to copy" inspection and then close the tab.
