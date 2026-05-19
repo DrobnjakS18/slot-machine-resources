@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pip install python-docx)",
+      "Bash(python -c ' *)",
+      "Bash(npm run *)",
+      "Bash(git status; echo \"---\"; ls \"C:/Users/drobn/Desktop/\")"
+    ]
+  }
+}

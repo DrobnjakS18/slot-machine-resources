@@ -1,0 +1,19 @@
+{
+  "name": "igt-slot-demo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "5x3 slot demo for IGT GameDeveloper test. TypeScript + PixiJS + Vite. Mock-server boundary, configurable PAR sheet, debug panel.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "pixi.js": "^7.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vite": "^5.2.0"
+  }
+}
