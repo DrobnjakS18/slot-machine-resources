@@ -1,4 +1,3 @@
-// Entry point: mount the Game into the #stage container.
 import { Game } from './game/Game';
 
 const stage = document.getElementById('stage');

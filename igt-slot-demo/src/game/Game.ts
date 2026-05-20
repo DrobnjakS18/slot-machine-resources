@@ -1,51 +1,71 @@
-// Top-level orchestrator. Owns the PixiJS Application and threads:
-//   user clicks SPIN → controls.setBusy(true) → reelSet.startSpin()
-//   → server response → reelSet.stopAt(stops) → winPresenter.show(wins)
-//   → controls.setBusy(false)
-
 import { Application, Container } from 'pixi.js';
 import { ROW_COUNT, REEL_COUNT } from '../config/constants';
 import * as server from '../server/mockedServer';
 import { bindControls, Controls } from './BetSelector';
-import { bindDebugPanel } from './DebugPanel';
 import { ReelSet } from './ReelSet';
 import { buildSymbolTextures } from './SymbolTextures';
 import { WinPresenter } from './WinPresenter';
 
-const SYMBOL_SIZE = 240;
+const MAX_SYMBOL_SIZE = 240;
+const GAP = 8;
+const PADDING = 14;
+
+function computeSymbolSize(wrap: HTMLElement): number {
+  const availW = wrap.clientWidth  || window.innerWidth  * 0.65;
+  const availH = wrap.clientHeight || window.innerHeight * 0.90;
+  const fromW = Math.floor((availW - (REEL_COUNT - 1) * GAP - PADDING * 2) / REEL_COUNT);
+  const fromH = Math.floor((availH - PADDING * 2) / ROW_COUNT);
+  return Math.max(60, Math.min(MAX_SYMBOL_SIZE, fromW, fromH));
+}
 
 export class Game {
   private readonly app: Application;
+  private readonly symbolSize: number;
+  private readonly logicalW: number;
+  private readonly logicalH: number;
   private reelSet!: ReelSet;
   private winPresenter!: WinPresenter;
   private controls!: Controls;
   private busy = false;
 
   constructor(parentEl: HTMLElement) {
-    const widthPx = REEL_COUNT * SYMBOL_SIZE + (REEL_COUNT - 1) * 8 + 14 * 2;
-    const heightPx = ROW_COUNT * SYMBOL_SIZE + 14 * 2;
-
+    const wrap = parentEl.parentElement ?? parentEl;
+    this.symbolSize = computeSymbolSize(wrap);
+    this.logicalW = REEL_COUNT * this.symbolSize + (REEL_COUNT - 1) * GAP + PADDING * 2;
+    this.logicalH = ROW_COUNT  * this.symbolSize + PADDING * 2;
 
     this.app = new Application({
-      width: widthPx,
-      height: heightPx,
+      width: this.logicalW,
+      height: this.logicalH,
       backgroundAlpha: 0,
       antialias: true,
       resolution: window.devicePixelRatio || 1,
       autoDensity: true,
     });
     parentEl.appendChild(this.app.view as HTMLCanvasElement);
+
+    this.fitToContainer(wrap);
+    new ResizeObserver(() => this.fitToContainer(wrap)).observe(wrap);
+  }
+
+  private fitToContainer(wrap: HTMLElement): void {
+    const availW = wrap.clientWidth;
+    const availH = wrap.clientHeight;
+    if (!availW || !availH) return;
+    const scale = Math.min(1, availW / this.logicalW, availH / this.logicalH);
+    this.app.renderer.resize(this.logicalW * scale, this.logicalH * scale);
+    this.app.stage.scale.set(scale);
   }
 
   async start(): Promise<void> {
     const info = server.getReelInfo();
-    const textures = buildSymbolTextures(this.app, SYMBOL_SIZE);
+    const textures = buildSymbolTextures(this.app, this.symbolSize);
 
     this.reelSet = new ReelSet({
       app: this.app,
       reelStrips: info.reels,
       textures,
-      symbolSize: SYMBOL_SIZE,
+      symbolSize: this.symbolSize,
       initialStops: new Array(info.reelCount).fill(0),
     });
 
@@ -60,7 +80,6 @@ export class Game {
     this.controls.onSpeedChange((m) => this.reelSet.setSpeedMultiplier(m));
     this.controls.setBalance(server.getBalance());
 
-    bindDebugPanel(info, server.setForceStops);
   }
 
   private async handleSpin(): Promise<void> {

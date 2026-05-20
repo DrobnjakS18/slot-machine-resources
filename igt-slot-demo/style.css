@@ -1,0 +1,138 @@
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0b0f17;
+  color: #e6edf3;
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    sans-serif;
+}
+#app {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  grid-template-rows: 1fr;
+  gap: 16px;
+  height: 100vh;
+  padding: 16px;
+}
+#stage-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #1a2030 0%, #0b0f17 70%);
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 0;
+}
+#stage {
+  display: block;
+}
+#side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.panel {
+  background: #131a26;
+  border: 1px solid #25304a;
+  border-radius: 10px;
+  padding: 12px;
+}
+.panel h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #9fb0d0;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 14px;
+}
+.row label {
+  flex: 0 0 88px;
+  color: #9fb0d0;
+}
+select,
+input[type="number"],
+button {
+  background: #1c2435;
+  color: #e6edf3;
+  border: 1px solid #2c3a55;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+button {
+  cursor: pointer;
+}
+button:hover {
+  background: #25304a;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.balance {
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffd166;
+}
+.win {
+  font-size: 18px;
+  color: #06d6a0;
+  min-height: 22px;
+}
+.debug-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+.debug-grid input {
+  width: 100%;
+  padding: 4px;
+  font-size: 12px;
+}
+details summary {
+  cursor: pointer;
+  color: #9fb0d0;
+  font-size: 13px;
+}
+.muted {
+  color: #6b7a99;
+  font-size: 12px;
+}
+@media (max-width: 900px) {
+  #app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    height: auto;
+    min-height: 100vh;
+  }
+  #stage-wrap {
+    min-height: 50vw;
+  }
+}
+#spin-btn {
+  flex: 1;
+  padding: 10px;
+}
+#speed-label {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  color: #ffd166;
+}
