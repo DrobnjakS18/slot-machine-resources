@@ -17,7 +17,7 @@
 // bottom). Each frame we update each slot's texture from the reelstrip and
 // position it relative to `position`. No splice or rebuild — just texture swaps.
 
-import { Container, Sprite, Texture } from 'pixi.js';
+import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import { SymbolId } from '../config/symbols';
 import { SymbolTextureMap } from './SymbolTextures';
 
@@ -80,12 +80,14 @@ export class Reel {
     this.position = args.initialStop;
 
     this.container = new Container();
-    // Clip the reel so the buffer sprites stay hidden outside the play window.
-    const mask = new Sprite(Texture.WHITE);
-    mask.width = this.symbolSize;
-    mask.height = this.symbolSize * this.rowCount;
-    mask.x = 0;
-    mask.y = 0;
+    // Clip the reel to the 3-row play window so the buffer sprites above and
+    // below stay hidden and never bleed into adjacent reels. A Graphics rect is
+    // an axis-aligned scissor/stencil mask — pixel-perfect and cheaper than an
+    // alpha (Sprite) mask.
+    const mask = new Graphics();
+    mask.beginFill(0xffffff);
+    mask.drawRect(0, 0, this.symbolSize, this.symbolSize * this.rowCount);
+    mask.endFill();
     this.container.addChild(mask);
     this.container.mask = mask;
 
