@@ -17,3 +17,8 @@ export const SPEED_LEVELS: { label: string; multiplier: number }[] = [
   { label: 'Turbo',  multiplier: 4.0 },
 ];
 export const DEFAULT_SPEED_INDEX = 1;
+
+// Cabinet layout dimensions.
+export const MAX_SYMBOL_SIZE = 240;
+export const GAP = 8;
+export const PADDING = 14;

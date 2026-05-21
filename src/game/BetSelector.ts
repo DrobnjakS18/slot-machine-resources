@@ -17,6 +17,7 @@ export type Controls = {
   onSpeedChange(handler: (multiplier: number) => void): void;
 };
 
+// Wires all HTML controls and returns a Controls interface for Game to drive.
 export function bindControls(): Controls {
   const select = document.getElementById('bet-select') as HTMLSelectElement;
   const spinBtn = document.getElementById('spin-btn') as HTMLButtonElement;
@@ -84,6 +85,7 @@ export function bindControls(): Controls {
   };
 }
 
+// Renders the paytable from config data as an HTML string injected into #paytable.
 function renderPaytableHtml(): string {
   const rows: string[] = [];
   for (const id of SYMBOL_IDS) {

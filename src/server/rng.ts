@@ -1,20 +1,13 @@
-// Thin RNG wrapper.
-//
-// Math.random() is fine for a demo. For real-money play this module would
-// swap to crypto.getRandomValues — the rest of the codebase would not change.
-//
-// Also exposes a per-reel override hook used by the debug panel to force
-// specific stops. The override is checked first; if it returns null/undefined
-// the RNG falls through.
-
 export type RngOverride = (reelIndex: number) => number | null | undefined;
 
 let override: RngOverride | null = null;
 
+// Registers a hook that can force specific stop indices — used for testing/debug.
 export function setRngOverride(fn: RngOverride | null): void {
   override = fn;
 }
 
+// Returns a stop index for one reel, using the override hook if set, else Math.random().
 export function pickStop(reelIndex: number, reelLen: number): number {
   const forced = override?.(reelIndex);
   if (typeof forced === 'number' && forced >= 0 && forced < reelLen) {
@@ -23,9 +16,10 @@ export function pickStop(reelIndex: number, reelLen: number): number {
   return Math.floor(Math.random() * reelLen);
 }
 
-// Unbiased Fisher-Yates shuffle. Used once when building each reelstrip.
-export function shuffleFisherYates<T>(arr: T[]): T[] {
-  const out = arr.slice();
+
+// Fisher-Yates shuffle — returns a new shuffled copy, does not mutate the input.
+export function shuffle<T>(arr: T[]): T[] {
+  const out = arr.slice();  
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [out[i], out[j]] = [out[j], out[i]];

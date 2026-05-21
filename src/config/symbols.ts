@@ -21,7 +21,6 @@ export type SymbolMeta = {
   label: string;
   color: number;       // PixiJS fill color used by the procedural texture
   textColor: number;
-  // Copies of this symbol per reel. Array length must equal REEL_COUNT.
   frequency: [number, number, number, number, number];
   // Pays for [3, 4, 5] of a kind on a payline, in credits per credit bet.
   pays: [number, number, number];
@@ -40,7 +39,6 @@ export const SYMBOLS: Record<SymbolId, SymbolMeta> = {
 
 export const SYMBOL_IDS: SymbolId[] = Object.keys(SYMBOLS) as SymbolId[];
 
-// Convenience: total stops per reel given the configured frequencies.
 export function reelLength(reelIndex: number): number {
   return SYMBOL_IDS.reduce((sum, id) => sum + SYMBOLS[id].frequency[reelIndex], 0);
 }

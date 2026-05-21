@@ -68,14 +68,6 @@ Pays shown in credits per 1-credit bet.
 
 ---
 
-## Debug Panel
-
-Toggle the **Debug** checkbox in the UI to reveal per-reel stop inputs. Enter a stop index (0–N) for any reel to force that stop on the next spin. Leave a field blank to let that reel spin freely under RNG.
-
-The debug seam is wired through `rng.setRngOverride` — no game logic is bypassed; the same evaluator and server path run regardless.
-
----
-
 ## Key Design Decisions
 
 - **Mock server boundary** — `src/server/` has zero PixiJS imports. `getResponseData()` returns the same `SpinResponse` shape a real REST/WebSocket endpoint would, so the client is not coupled to local state.

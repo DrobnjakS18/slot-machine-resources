@@ -108,6 +108,7 @@ export class Reel {
     return this.state === 'idle';
   }
 
+  // Transitions from idle to accelerating; no-op if already spinning.
   startSpin(): void {
     if (this.state !== 'idle') return;
     this.state = 'accelerating';

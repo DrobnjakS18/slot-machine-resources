@@ -16,7 +16,7 @@ export type SpinResponse = {
   spinId: string;
   bet: number;
   reelStops: number[];
-  window: SymbolId[][];          // window[reel][row]
+  window: SymbolId[][]; // window[reel][row]
   wins: Win[];
   totalWin: number;
   newBalance: number;
@@ -44,8 +44,8 @@ function fakeLatencyMs(): number {
   return 80 + Math.random() * 120;
 }
 
+// Returns defensive copies of reelstrips so the client can't mutate server state.
 export function getReelInfo(): ReelInfo {
-  // Returns a defensive copy so the client can't mutate server-owned data.
   return {
     reels: reels.map((r) => r.slice()),
     reelCount: REEL_COUNT,
@@ -53,10 +53,12 @@ export function getReelInfo(): ReelInfo {
   };
 }
 
+// Returns current server-side balance.
 export function getBalance(): number {
   return balance;
 }
 
+// Main spin API: validates bet, deducts balance, picks stops, evaluates wins, returns SpinResponse.
 export function getResponseData(bet: number): Promise<SpinResponse> {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -98,10 +100,4 @@ export function getResponseData(bet: number): Promise<SpinResponse> {
       });
     }, fakeLatencyMs());
   });
-}
-
-// Test seam used by the debug panel. The game module passes a per-reel function
-// that returns a forced stop (or null to fall through to RNG).
-export function setForceStops(fn: RngOverride | null): void {
-  setRngOverride(fn);
 }

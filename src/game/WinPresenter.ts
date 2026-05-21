@@ -30,6 +30,7 @@ export class WinPresenter {
     this.container.destroy({ children: true });
   }
 
+  // Stores the win list and starts the pulse animation from the beginning.
   show(wins: Win[]): void {
     this.wins = wins;
     this.elapsedMs = 0;
@@ -50,6 +51,7 @@ export class WinPresenter {
     this.redraw(intensity);
   }
 
+  // Draws cell highlight rects and connecting payline paths at the given alpha intensity.
   private redraw(intensity: number): void {
     this.overlay.clear();
     for (const win of this.wins) {

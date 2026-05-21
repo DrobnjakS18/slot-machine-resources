@@ -89,6 +89,7 @@ export class ReelSet {
     this.speedMultiplier = m;
   }
 
+  // Starts all reels with a staggered delay to give the cabinet a wave feel.
   async startSpin(): Promise<void> {
     const stagger = START_STAGGER_MS / this.speedMultiplier;
     for (let i = 0; i < this.reels.length; i++) {

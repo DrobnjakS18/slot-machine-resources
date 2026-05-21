@@ -213,8 +213,6 @@ function calculateRTP() {
 }
 ```
 
-Add a `verifyRTP()` button to your demo's debug panel. It impresses.
-
 Sources: Easy Vegas "How They Work"; Easy Vegas "How to Program" — `calculateRTP()` function; Slot Game Design Tutorial 1.
 
 ---
@@ -373,7 +371,6 @@ Architectural points an interviewer will press on:
 - **The game never reaches into the server's RNG or state.** It only ever calls `await mockedServer.getResponseData(bet)`.
 - **Reel data is config, not code.** New paytable = JSON edit, not refactor.
 - **Animation is independent of randomness.** The reel animates a "fall toward this stop index"; the actual stop is determined and frozen before the animation starts.
-- **A debug panel** with: force a specific result, run 10k spins and show actual vs theoretical RTP, list current paylines. Smaller than it sounds, big payoff.
 
 Sources: KseniiaPrytkova repo (debug mode pattern); Easy Vegas server flow; kld.dev module layout; IGT test brief.
 
@@ -442,7 +439,7 @@ Sources: Easy Vegas Returns, Easy Vegas "How to Program"; Muir Ch. 2; common sen
 
 ## 14. Final 30-second pitch you can give in the interview
 
-"I built a 5×3 slot demo with a clean separation between a mock server module and the rendering layer. The server module owns the reel composition, paytable, RNG, and win evaluation — it has no dependency on PixiJS and could be lifted into a Node service unchanged. On each spin the client posts a bet, the server picks one random stop per reel using a weighted reelstrip, evaluates all paylines and scatters against the resulting window, and returns a JSON payload with stop indices, the win list (with cell positions for highlighting), and the new balance. The client animates the reels to their assigned stops and presents the wins. The reelstrips, paytable, and paylines are all data — swappable without code changes. I included a debug panel that lets me force a result and verify the theoretical RTP by either full-cycle iteration or a Monte Carlo run."
+"I built a 5×3 slot demo with a clean separation between a mock server module and the rendering layer. The server module owns the reel composition, paytable, RNG, and win evaluation — it has no dependency on PixiJS and could be lifted into a Node service unchanged. On each spin the client posts a bet, the server picks one random stop per reel using a weighted reelstrip, evaluates all paylines and scatters against the resulting window, and returns a JSON payload with stop indices, the win list (with cell positions for highlighting), and the new balance. The client animates the reels to their assigned stops and presents the wins. The reelstrips, paytable, and paylines are all data — swappable without code changes.
 
 That's the talk track. Build to it.
 
@@ -487,8 +484,6 @@ export const PAYTABLE: PayRule[] = [/* ... */];
 The upgrade gives you what KseniiaPrytkova lacks: instead of enumerating all 24 permutations of `[BAR, 2xBAR, 3xBAR]` by hand (her items 9.1–9.24), one `anyOf` rule covers them all.
 
 ### 15.2 Steal: the debug-mode concept (NOT the implementation)
-
-The repo includes a debug panel that lets you force the result of the next spin by picking a symbol per cell, then evaluates win logic against the forced result. This is the highest-value pattern in the whole repo.
 
 **Why it's worth stealing.**
 - It demonstrates that your win evaluator is separable from your RNG (you can drive it with arbitrary input).

@@ -1,26 +1,15 @@
 import { Application, Container } from 'pixi.js';
-import { ROW_COUNT, REEL_COUNT } from '../config/constants';
+import { REEL_COUNT, ROW_COUNT, GAP, PADDING } from '../config/constants';
+import { computeSymbolSize } from './utils';
 import * as server from '../server/mockedServer';
 import { bindControls, Controls } from './BetSelector';
 import { ReelSet } from './ReelSet';
 import { buildSymbolTextures } from './SymbolTextures';
 import { WinPresenter } from './WinPresenter';
 
-const MAX_SYMBOL_SIZE = 240;
-const GAP = 8;
-const PADDING = 14;
-
-function computeSymbolSize(wrap: HTMLElement): number {
-  const availW = wrap.clientWidth  || window.innerWidth  * 0.65;
-  const availH = wrap.clientHeight || window.innerHeight * 0.90;
-  const fromW = Math.floor((availW - (REEL_COUNT - 1) * GAP - PADDING * 2) / REEL_COUNT);
-  const fromH = Math.floor((availH - PADDING * 2) / ROW_COUNT);
-  return Math.max(60, Math.min(MAX_SYMBOL_SIZE, fromW, fromH));
-}
-
 export class Game {
   private readonly app: Application;
-  private readonly symbolSize: number;
+  private readonly responsiveSymbolSize: number;
   private readonly logicalW: number;
   private readonly logicalH: number;
   private reelSet!: ReelSet;
@@ -30,9 +19,9 @@ export class Game {
 
   constructor(parentEl: HTMLElement) {
     const wrap = parentEl.parentElement ?? parentEl;
-    this.symbolSize = computeSymbolSize(wrap);
-    this.logicalW = REEL_COUNT * this.symbolSize + (REEL_COUNT - 1) * GAP + PADDING * 2;
-    this.logicalH = ROW_COUNT  * this.symbolSize + PADDING * 2;
+    this.responsiveSymbolSize = computeSymbolSize(wrap);
+    this.logicalW = REEL_COUNT * this.responsiveSymbolSize + (REEL_COUNT - 1) * GAP + PADDING * 2;
+    this.logicalH = ROW_COUNT  * this.responsiveSymbolSize + PADDING * 2;
 
     this.app = new Application({
       width: this.logicalW,
@@ -48,6 +37,7 @@ export class Game {
     new ResizeObserver(() => this.fitToContainer(wrap)).observe(wrap);
   }
 
+  // Scales the canvas uniformly so the game fills the wrapper without overflow or distortion.
   private fitToContainer(wrap: HTMLElement): void {
     const availW = wrap.clientWidth;
     const availH = wrap.clientHeight;
@@ -57,15 +47,17 @@ export class Game {
     this.app.stage.scale.set(scale);
   }
 
+  // Bootstraps textures, reels, win overlay, and control bindings; called once after construction.
   async start(): Promise<void> {
     const info = server.getReelInfo();
-    const textures = buildSymbolTextures(this.app, this.symbolSize);
+    const textures = buildSymbolTextures(this.app, this.responsiveSymbolSize);
+    // debugger
 
     this.reelSet = new ReelSet({
       app: this.app,
       reelStrips: info.reels,
       textures,
-      symbolSize: this.symbolSize,
+      symbolSize: this.responsiveSymbolSize,
       initialStops: new Array(info.reelCount).fill(0),
     });
 
@@ -82,6 +74,7 @@ export class Game {
 
   }
 
+  // Fires the visual spin and the server call in parallel; settles reels once the response lands.
   private async handleSpin(): Promise<void> {
     if (this.busy) return;
     this.busy = true;

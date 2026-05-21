@@ -27,6 +27,7 @@ export type Win = {
 
 export type SymbolWindow = SymbolId[][]; // window[reel][row]
 
+// Looks up the payout for a symbol+count combination scaled by bet; 0 if below MIN_MATCH.
 function payoutFor(symbol: SymbolId, count: number, bet: number): number {
   if (count < MIN_MATCH) return 0;
   const meta = SYMBOLS[symbol];
@@ -34,6 +35,7 @@ function payoutFor(symbol: SymbolId, count: number, bet: number): number {
   return meta.pays[idx] * bet;
 }
 
+// Walks one payline left-to-right and returns a Win if run length >= MIN_MATCH, else null.
 function evaluatePayline(line: Payline, window: SymbolWindow, bet: number): Win | null {
   let runSymbol: SymbolId | null = null; // null = "still all-wild, undetermined"
   let runCount = 0;
@@ -80,6 +82,7 @@ function evaluatePayline(line: Payline, window: SymbolWindow, bet: number): Win 
   };
 }
 
+// Evaluates all configured paylines against the window; returns every win found.
 export function evaluateWindow(window: SymbolWindow, bet: number): Win[] {
   const wins: Win[] = [];
   for (const line of PAYLINES) {
