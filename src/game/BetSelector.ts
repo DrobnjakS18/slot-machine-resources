@@ -52,7 +52,7 @@ export function bindControls(): Controls {
 
   const refreshSpeed = () => {
     const level = SPEED_LEVELS[speedIndex];
-    speedLabelEl.textContent = `${level.label} (${level.multiplier}×)`;
+    speedLabelEl.textContent = level.label;
     speedDownBtn.disabled = speedIndex === 0;
     speedUpBtn.disabled = speedIndex === SPEED_LEVELS.length - 1;
     speedHandler?.(level.multiplier);
@@ -76,7 +76,16 @@ export function bindControls(): Controls {
       speedDownBtn.disabled = speedIndex === 0;
       speedUpBtn.disabled = speedIndex === SPEED_LEVELS.length - 1;
     },
-    setWinText: (text) => { winEl.textContent = text; },
+    setWinText: (text) => {
+      const isError = text === 'Low balance';
+      const isEmpty = text === '';
+      winEl.classList.toggle('error', isError);
+      if (isEmpty || isError) {
+        winEl.textContent = text;
+      } else {
+        winEl.innerHTML = `<span class="win-label">win</span><span class="win-amount">+${text}</span>`;
+      }
+    },
     onSpin: (handler) => { spinHandler = handler; },
     onSpeedChange: (handler) => {
       speedHandler = handler;

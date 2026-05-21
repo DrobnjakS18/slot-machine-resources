@@ -18,29 +18,21 @@
           <div class="win" id="win-text"></div>
         </div>
         <div class="panel">
-          <h3>Controls</h3>
-          <div class="row">
-            <label for="bet-select">Bet</label>
-            <select id="bet-select"></select>
+          <div class="controls-top">
+            <div class="control-group">
+              <label class="ctrl-label" for="bet-select">Bet</label>
+              <select id="bet-select"></select>
+            </div>
+            <div class="control-group">
+              <label class="ctrl-label">Speed</label>
+              <div class="speed-control">
+                <button id="speed-down-btn">−</button>
+                <span id="speed-label">Normal</span>
+                <button id="speed-up-btn">+</button>
+              </div>
+            </div>
           </div>
-          <div class="row">
-            <label>Speed</label>
-            <button
-              id="speed-down-btn"
-            >
-              −
-            </button>
-            <span
-              id="speed-label"
-              >Normal</span
-            >
-            <button id="speed-up-btn">
-              +
-            </button>
-          </div>
-          <div class="row">
-            <button id="spin-btn">SPIN</button>
-          </div>
+          <button id="spin-btn">SPIN</button>
         </div>
         <div class="panel">
           <h3>Paytable</h3>

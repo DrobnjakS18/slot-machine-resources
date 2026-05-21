@@ -96,7 +96,7 @@ export class Game {
     }
 
     if(response.error === 'Insufficient balance') {
-      this.controls.setWinText('Insufficient balance');
+      this.controls.setWinText('Low balance');
       this.busy = false;
       this.controls.setBusy(false);
       return;
@@ -120,11 +120,10 @@ export class Game {
 
     this.controls.setBalance(response.newBalance);
     if (response.totalWin > 0) {
-      const parts = response.wins.map((w) => `${w.paylineName}: ${w.count}× ${w.symbol} (${w.payout})`);
-      this.controls.setWinText(`WIN ${response.totalWin} — ${parts.join(' · ')}`);
+      this.controls.setWinText(String(response.totalWin));
       this.winPresenter.show(response.wins);
     } else {
-      this.controls.setWinText('No win');
+      this.controls.setWinText('');
     }
 
     this.busy = false;
