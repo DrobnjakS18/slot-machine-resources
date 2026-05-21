@@ -35,6 +35,7 @@ function renderOne(renderer: Renderer, meta: typeof SYMBOLS[SymbolId], size: num
 
   container.addChild(card, highlight);
 
+  // Label.
   const style = new TextStyle({
     fontFamily: 'Georgia, "Times New Roman", serif',
     fontSize: meta.isWild ? size * 0.22 : size * 0.42,
@@ -44,6 +45,7 @@ function renderOne(renderer: Renderer, meta: typeof SYMBOLS[SymbolId], size: num
     strokeThickness: 2,
     align: 'center',
   });
+
   const label = new Text(meta.label, style);
   label.anchor.set(0.5);
   label.x = size / 2;
