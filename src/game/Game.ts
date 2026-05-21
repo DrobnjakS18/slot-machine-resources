@@ -84,14 +84,27 @@ export class Game {
 
     const bet = this.controls.getBet();
 
-    // Optimistically deduct the bet so the balance updates on click, not after the spin.
+    // Client-side balance guard — avoids spinning the reels only to show an error.
+    if (server.getBalance() < bet) {
+      this.controls.setWinText('Low balance');
+      this.busy = false;
+      this.controls.setBusy(false);
+      return;
+    }
+
+    // Deduct optimistically so the balance updates on click.
     this.controls.setBalance(server.getBalance() - bet);
+
+    // Start the visual spin immediately, then fire the server call in parallel.
+    // Reels will be cruising by the time the response lands and stopAt is called.
+    this.reelSet.startSpin();
 
     let response;
     try {
       response = await server.getResponseData(bet);
     } catch (err) {
       console.error(err);
+      await this.reelSet.stopAt(new Array(REEL_COUNT).fill(0));
       this.controls.setBalance(server.getBalance());
       this.controls.setWinText('Server error');
       this.busy = false;
@@ -99,24 +112,10 @@ export class Game {
       return;
     }
 
-    if(response.error === 'Insufficient balance') {
-      this.controls.setBalance(server.getBalance());
-      this.controls.setWinText('Low balance');
-      this.busy = false;
-      this.controls.setBusy(false);
-      return;
-    }
-
-    // Kick off the visual spin AND fire the server call in parallel — the
-    // animation will keep cruising until the response lands and we know where
-    // to stop.
-    this.reelSet.startSpin();
-
     if (response.error) {
-      // Stop reels on whatever was showing before — pick stops [0,0,0,0,0] for simplicity.
       await this.reelSet.stopAt(new Array(REEL_COUNT).fill(0));
       this.controls.setBalance(server.getBalance());
-      this.controls.setWinText(response.error);
+      this.controls.setWinText('Low balance');
       this.busy = false;
       this.controls.setBusy(false);
       return;

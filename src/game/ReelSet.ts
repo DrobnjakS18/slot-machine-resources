@@ -12,7 +12,7 @@ import { SymbolTextureMap } from './SymbolTextures';
 const REEL_GAP = 8;
 const FRAME_PAD = 14;
 const START_STAGGER_MS = 80;
-const STOP_STAGGER_MS = 110;
+const STOP_STAGGER_MS = 300;
 
 export class ReelSet {
   readonly container: Container;

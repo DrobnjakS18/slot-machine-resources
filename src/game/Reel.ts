@@ -25,7 +25,7 @@ type ReelState = 'idle' | 'accelerating' | 'cruising' | 'decelerating' | 'bounci
 
 const CRUISE_SPEED = 32;            // rows per second during cruise
 const ACCEL_TIME = 0.22;            // seconds, 0 → cruise
-const MIN_CRUISE_TIME = 0.35;       // each reel must cruise at least this long
+const MIN_CRUISE_TIME = 0;          // reels respond to stop immediately; MIN_SPIN_ROWS guarantees min travel
 const DECEL_TIME = 0.55;            // seconds for the deceleration tween
 const DECEL_OVERSHOOT_ROWS = 0.55;  // reel slides this far PAST its landing during decel
 const BOUNCE_TIME = 0.36;           // seconds for the bounce-back tween
