@@ -84,11 +84,15 @@ export class Game {
 
     const bet = this.controls.getBet();
 
+    // Optimistically deduct the bet so the balance updates on click, not after the spin.
+    this.controls.setBalance(server.getBalance() - bet);
+
     let response;
     try {
       response = await server.getResponseData(bet);
     } catch (err) {
       console.error(err);
+      this.controls.setBalance(server.getBalance());
       this.controls.setWinText('Server error');
       this.busy = false;
       this.controls.setBusy(false);
@@ -96,6 +100,7 @@ export class Game {
     }
 
     if(response.error === 'Insufficient balance') {
+      this.controls.setBalance(server.getBalance());
       this.controls.setWinText('Low balance');
       this.busy = false;
       this.controls.setBusy(false);
@@ -110,6 +115,7 @@ export class Game {
     if (response.error) {
       // Stop reels on whatever was showing before — pick stops [0,0,0,0,0] for simplicity.
       await this.reelSet.stopAt(new Array(REEL_COUNT).fill(0));
+      this.controls.setBalance(server.getBalance());
       this.controls.setWinText(response.error);
       this.busy = false;
       this.controls.setBusy(false);

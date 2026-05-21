@@ -42,6 +42,12 @@ export function bindControls(): Controls {
 
   let spinHandler: (() => void) | null = null;
   spinBtn.addEventListener('click', () => spinHandler?.());
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !spinBtn.disabled) {
+      e.preventDefault();
+      spinHandler?.();
+    }
+  });
 
   // Speed up / slow down controls.
   const speedDownBtn = document.getElementById('speed-down-btn') as HTMLButtonElement;
