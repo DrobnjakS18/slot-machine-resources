@@ -88,14 +88,44 @@ export function bindControls(): Controls {
 // Renders the paytable from config data as an HTML string injected into #paytable.
 function renderPaytableHtml(): string {
   const rows: string[] = [];
+
+  // Wild symbol section
+  const wild = SYMBOLS[SYMBOL_IDS.find((id) => SYMBOLS[id].isWild)!];
+  rows.push(
+    `<div class="paytable-wild">` +
+    `<span class="wild-label" style="color:#${wild.color.toString(16).padStart(6, '0')}">WILD</span>` +
+    `<span class="wild-desc">Substitutes for any symbol</span>` +
+    `</div>`
+  );
+
+  // Table header
+  rows.push(`<div class="paytable-table">`);
+  rows.push(
+    `<div class="paytable-header">` +
+    `<span class="col-symbol">Symbol</span>` +
+    `<span class="col-pay">3×</span>` +
+    `<span class="col-pay">4×</span>` +
+    `<span class="col-pay">5×</span>` +
+    `</div>`
+  );
+
+  // Symbol rows
   for (const id of SYMBOL_IDS) {
     const s = SYMBOLS[id];
-    if (s.isWild) {
-      rows.push(`<div><b style="color:#${s.color.toString(16).padStart(6, '0')}">${s.label}</b> — substitutes for any symbol</div>`);
-    } else {
-      rows.push(`<div><b style="color:#${s.color.toString(16).padStart(6, '0')}">${s.label}</b> — x3 ${s.pays[0]} / x4 ${s.pays[1]} / x5 ${s.pays[2]}</div>`);
+    if (!s.isWild) {
+      rows.push(
+        `<div class="paytable-row">` +
+        `<span class="col-symbol" style="color:#${s.color.toString(16).padStart(6, '0')}"><b>${s.label}</b></span>` +
+        `<span class="col-pay">${s.pays[0]}</span>` +
+        `<span class="col-pay">${s.pays[1]}</span>` +
+        `<span class="col-pay">${s.pays[2]}</span>` +
+        `</div>`
+      );
     }
   }
-  rows.push(`<div style="margin-top:6px;">${PAYLINES.length} paylines · left-to-right · highest pays</div>`);
+  rows.push(`</div>`);
+
+  // Footer
+  rows.push(`<div class="paytable-footer">${PAYLINES.length} paylines · left-to-right</div>`);
   return rows.join('');
 }

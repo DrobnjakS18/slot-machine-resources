@@ -136,3 +136,69 @@ details summary {
   font-weight: 600;
   color: #ffd166;
 }
+
+/* Paytable styling */
+.paytable-wild {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #25304a;
+}
+.wild-label {
+  font-weight: 700;
+  font-size: 13px;
+}
+.wild-desc {
+  font-size: 12px;
+  color: #6b7a99;
+}
+
+.paytable-table {
+  display: grid;
+  grid-template-columns: 1fr 35px 35px 35px;
+  gap: 0;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.paytable-header {
+  display: contents;
+}
+.paytable-header > * {
+  padding: 6px 4px;
+  font-weight: 600;
+  color: #9fb0d0;
+  border-bottom: 1px solid #25304a;
+  text-align: right;
+}
+.paytable-header > .col-symbol {
+  text-align: left;
+}
+
+.paytable-row {
+  display: contents;
+}
+.paytable-row > * {
+  padding: 5px 4px;
+  border-bottom: 1px solid #1f2938;
+}
+.paytable-row .col-symbol {
+  text-align: left;
+  font-weight: 600;
+}
+.paytable-row .col-pay {
+  text-align: right;
+  color: #c9d1e0;
+}
+.paytable-row:hover > * {
+  background: rgba(255, 209, 102, 0.05);
+}
+
+.paytable-footer {
+  font-size: 11px;
+  color: #6b7a99;
+  padding-top: 6px;
+  border-top: 1px solid #25304a;
+  text-align: center;
+}
