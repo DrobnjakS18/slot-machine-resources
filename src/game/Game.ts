@@ -126,6 +126,7 @@ export class Game {
     if (response.totalWin > 0) {
       this.controls.setBalance(response.newBalance, true);
       this.controls.setWinText(String(response.totalWin));
+      this.controls.setLastWin(response.totalWin);
       this.winPresenter.show(response.wins);
     } else {
       this.controls.setBalance(response.newBalance);

@@ -106,7 +106,7 @@ export class ReelSet {
     if (stops.length !== this.reels.length) {
       throw new Error(`stopAt: expected ${this.reels.length} stops, got ${stops.length}`);
     }
-    const stagger = STOP_STAGGER_MS / this.speedMultiplier;
+    const stagger = this.speedMultiplier >= 4 ? 0 : STOP_STAGGER_MS / this.speedMultiplier;
     const promises: Promise<void>[] = [];
     for (let i = 0; i < this.reels.length; i++) {
       const reel = this.reels[i];

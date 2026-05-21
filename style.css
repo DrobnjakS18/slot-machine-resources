@@ -125,6 +125,15 @@ button:disabled {
 .balance.pop {
   animation: winPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
+.last-win {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7a99;
+  text-align: center;
+  letter-spacing: 0.06em;
+  height: 24px;
+  padding: 10px 0;
+}
 .win {
   padding-top: 12px;
   height: 64px;

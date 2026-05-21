@@ -11,6 +11,7 @@ export type Controls = {
   setBalance(balance: number, celebrate?: boolean): void;
   setBusy(busy: boolean): void;
   setWinText(text: string): void;
+  setLastWin(amount: number): void;
   onSpin(handler: () => void): void;
   // Speed control — calls back with the new multiplier whenever the user
   // taps +/-. The handler is also invoked once on bind with the default.
@@ -24,6 +25,7 @@ export function bindControls(): Controls {
   const balanceEl = document.getElementById('balance') as HTMLDivElement;
   const winEl = document.getElementById('win-text') as HTMLDivElement;
   const paytableEl = document.getElementById('paytable') as HTMLDivElement;
+  const lastWinEl = document.getElementById('last-win') as HTMLDivElement;
 
   // Populate the bet combo box from the configured BET_VALUES.
   for (const v of BET_VALUES) {
@@ -96,8 +98,11 @@ export function bindControls(): Controls {
       if (isEmpty || isError) {
         winEl.textContent = text;
       } else {
-        winEl.innerHTML = `<span class="win-label">win</span><span class="win-amount">+${text}</span>`;
+        winEl.innerHTML = `<span class="win-label">win</span><span class="win-amount">${text}</span>`;
       }
+    },
+    setLastWin: (amount) => {
+      lastWinEl.textContent = `Last win  ${amount}`;
     },
     onSpin: (handler) => { spinHandler = handler; },
     onSpeedChange: (handler) => {

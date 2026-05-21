@@ -97,7 +97,7 @@ export function buildWindow(reels: SymbolId[][], stops: number[]): SymbolWindow 
   return reels.map((reel, r) => {
     const stop = stops[r];
     const col: SymbolId[] = [];
-    for (let row = 0; row < ROW_COUNT; row++) col.push(reel[(stop + row) % reel.length]);
+    for (let row = 0; row < ROW_COUNT; row++) col.push(reel[(stop - row + reel.length) % reel.length]);
     return col;
   });
 }

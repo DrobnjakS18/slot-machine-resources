@@ -55,14 +55,16 @@ export class WinPresenter {
   private redraw(intensity: number): void {
     this.overlay.clear();
     for (const win of this.wins) {
-      // Cell highlights.
-      this.overlay.lineStyle({ width: 3, color: win.paylineColor, alpha: intensity });
+      // Filled cell highlight (pulses in and out).
       for (const [r, row] of win.positions) {
         const c = this.reelSet.cellPosition(r, row);
+        this.overlay.lineStyle({ width: 3, color: win.paylineColor, alpha: intensity });
+        this.overlay.beginFill(win.paylineColor, intensity * 0.28);
         this.overlay.drawRoundedRect(c.x + 2, c.y + 2, c.size - 4, c.size - 4, 8);
+        this.overlay.endFill();
       }
-      // Connecting payline through the cells.
-      this.overlay.lineStyle({ width: 4, color: win.paylineColor, alpha: intensity * 0.8 });
+      // Connecting payline through cell centers.
+      this.overlay.lineStyle({ width: 3, color: win.paylineColor, alpha: intensity * 0.9 });
       let started = false;
       for (const [r, row] of win.positions) {
         const c = this.reelSet.cellPosition(r, row);
