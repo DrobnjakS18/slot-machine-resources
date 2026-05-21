@@ -108,16 +108,22 @@ button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-.balance {
-  font-size: 32px;
-  font-weight: 700;
-  color: #ffd166;
+.balance-box {
   background: rgba(255, 209, 102, 0.08);
   border: 2px solid #ffd166;
   border-radius: 8px;
   padding: 12px 16px;
   text-align: center;
+}
+.balance {
+  display: inline-block;
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffd166;
   letter-spacing: 0.05em;
+}
+.balance.pop {
+  animation: winPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 .win {
   padding-top: 12px;

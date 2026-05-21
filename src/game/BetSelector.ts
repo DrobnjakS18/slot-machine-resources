@@ -8,7 +8,7 @@ import { SYMBOLS, SYMBOL_IDS } from '../config/symbols';
 
 export type Controls = {
   getBet(): number;
-  setBalance(balance: number): void;
+  setBalance(balance: number, celebrate?: boolean): void;
   setBusy(busy: boolean): void;
   setWinText(text: string): void;
   onSpin(handler: () => void): void;
@@ -72,7 +72,14 @@ export function bindControls(): Controls {
 
   return {
     getBet: () => Number(select.value),
-    setBalance: (balance) => { balanceEl.textContent = String(balance); },
+    setBalance: (balance, celebrate) => {
+      balanceEl.textContent = String(balance);
+      if (celebrate) {
+        balanceEl.classList.remove('pop');
+        void balanceEl.offsetWidth;
+        balanceEl.classList.add('pop');
+      }
+    },
     setBusy: (busy) => {
       spinBtn.disabled = busy;
       select.disabled = busy;

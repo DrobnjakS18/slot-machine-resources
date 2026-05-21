@@ -124,11 +124,12 @@ export class Game {
 
     await this.reelSet.stopAt(response.reelStops);
 
-    this.controls.setBalance(response.newBalance);
     if (response.totalWin > 0) {
+      this.controls.setBalance(response.newBalance, true);
       this.controls.setWinText(String(response.totalWin));
       this.winPresenter.show(response.wins);
     } else {
+      this.controls.setBalance(response.newBalance);
       this.controls.setWinText('');
     }
 
