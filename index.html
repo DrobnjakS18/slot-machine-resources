@@ -12,7 +12,7 @@
         <div id="stage"></div>
       </div>
       <aside id="side">
-        <div class="panel">
+        <div class="panel panel--balance">
           <h3>Balance</h3>
           <div class="balance-box">
             <span class="balance" id="balance">1000</span>
@@ -23,8 +23,15 @@
         <div class="panel">
           <div class="controls-top">
             <div class="control-group">
-              <label class="ctrl-label" for="bet-select">Bet</label>
-              <select id="bet-select"></select>
+              <label class="ctrl-label">Bet</label>
+              <div class="bet-control">
+                <button id="bet-down-btn">−</button>
+                <button id="bet-label-btn" class="bet-label-btn">
+                  <!-- <span class="bet-ctrl-sub">BET</span> -->
+                  <span id="bet-label">1</span>
+                </button>
+                <button id="bet-up-btn">+</button>
+              </div>
             </div>
             <div class="control-group">
               <label class="ctrl-label">Speed</label>
@@ -42,6 +49,15 @@
           <div id="paytable" class="muted"></div>
         </div>
       </aside>
+    </div>
+    <div id="bet-popup-overlay" class="bet-popup-overlay">
+      <div class="bet-popup">
+        <div class="bet-popup-header">
+          <span>BET</span>
+          <button id="bet-popup-close">×</button>
+        </div>
+        <div id="bet-popup-grid" class="bet-popup-grid"></div>
+      </div>
     </div>
     <script type="module" src="/src/index.ts"></script>
   </body>

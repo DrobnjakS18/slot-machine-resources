@@ -20,21 +20,62 @@ export type Controls = {
 
 // Wires all HTML controls and returns a Controls interface for Game to drive.
 export function bindControls(): Controls {
-  const select = document.getElementById('bet-select') as HTMLSelectElement;
+  const betDownBtn = document.getElementById('bet-down-btn') as HTMLButtonElement;
+  const betUpBtn = document.getElementById('bet-up-btn') as HTMLButtonElement;
+  const betLabelBtn = document.getElementById('bet-label-btn') as HTMLButtonElement;
+  const betLabelEl = document.getElementById('bet-label') as HTMLSpanElement;
+  const betPopupOverlay = document.getElementById('bet-popup-overlay') as HTMLDivElement;
+  const betPopupGrid = document.getElementById('bet-popup-grid') as HTMLDivElement;
+  const betPopupClose = document.getElementById('bet-popup-close') as HTMLButtonElement;
+
   const spinBtn = document.getElementById('spin-btn') as HTMLButtonElement;
   const balanceEl = document.getElementById('balance') as HTMLDivElement;
   const winEl = document.getElementById('win-text') as HTMLDivElement;
   const paytableEl = document.getElementById('paytable') as HTMLDivElement;
   const lastWinEl = document.getElementById('last-win') as HTMLDivElement;
 
-  // Populate the bet combo box from the configured BET_VALUES.
-  for (const v of BET_VALUES) {
-    const opt = document.createElement('option');
-    opt.value = String(v);
-    opt.textContent = `${v} credits`;
-    select.appendChild(opt);
+  let betIndex = 0;
+  let betBusy = false;
+
+  const refreshBet = () => {
+    betLabelEl.textContent = String(BET_VALUES[betIndex]);
+    betDownBtn.disabled = betBusy || betIndex === 0;
+    betUpBtn.disabled = betBusy || betIndex === BET_VALUES.length - 1;
+    betPopupGrid.querySelectorAll<HTMLButtonElement>('.bet-option-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', i === betIndex);
+    });
+  };
+
+  const openBetPopup = () => { betPopupOverlay.classList.add('open'); };
+  const closeBetPopup = () => { betPopupOverlay.classList.remove('open'); };
+
+  // Populate popup grid from BET_VALUES.
+  for (let i = 0; i < BET_VALUES.length; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'bet-option-btn';
+    btn.textContent = String(BET_VALUES[i]);
+    btn.addEventListener('click', () => {
+      if (betBusy) return;
+      betIndex = i;
+      refreshBet();
+      closeBetPopup();
+    });
+    betPopupGrid.appendChild(btn);
   }
-  select.value = String(BET_VALUES[0]);
+
+  betDownBtn.addEventListener('click', () => {
+    if (!betBusy && betIndex > 0) { betIndex--; refreshBet(); }
+  });
+  betUpBtn.addEventListener('click', () => {
+    if (!betBusy && betIndex < BET_VALUES.length - 1) { betIndex++; refreshBet(); }
+  });
+  betLabelBtn.addEventListener('click', () => { if (!betBusy) openBetPopup(); });
+  betPopupClose.addEventListener('click', closeBetPopup);
+  betPopupOverlay.addEventListener('click', (e) => {
+    if (e.target === betPopupOverlay) closeBetPopup();
+  });
+
+  refreshBet();
 
   // Initial balance.
   balanceEl.textContent = String(STARTING_BALANCE);
@@ -73,7 +114,7 @@ export function bindControls(): Controls {
   });
 
   return {
-    getBet: () => Number(select.value),
+    getBet: () => BET_VALUES[betIndex],
     setBalance: (balance, celebrate) => {
       balanceEl.textContent = String(balance);
       if (celebrate) {
@@ -83,11 +124,13 @@ export function bindControls(): Controls {
       }
     },
     setBusy: (busy) => {
+      betBusy = busy;
       spinBtn.disabled = busy;
-      select.disabled = busy;
+      betLabelBtn.disabled = busy;
+      betDownBtn.disabled = busy || betIndex === 0;
+      betUpBtn.disabled = busy || betIndex === BET_VALUES.length - 1;
       spinBtn.textContent = busy ? 'SPINNING…' : 'SPIN';
       // Speed buttons stay enabled mid-spin so the player can adjust live.
-      // Re-evaluate the clamp-disabled state.
       speedDownBtn.disabled = speedIndex === 0;
       speedUpBtn.disabled = speedIndex === SPEED_LEVELS.length - 1;
     },
