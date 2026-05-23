@@ -1,6 +1,5 @@
 // Highlights winning cells and draws the payline path on top of the reel set.
 // Pulses on/off so the player can absorb multiple coinciding wins one by one,
-// then loops while the SPIN button is idle.
 
 import { Container, Graphics, Ticker } from 'pixi.js';
 import { Win } from '../server/evaluator';

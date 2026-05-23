@@ -1,7 +1,3 @@
-// HTML-side controls (kept out of the PixiJS layer so they're trivially styleable
-// with CSS and accessible to screen readers). Wraps the bet <select>, spin
-// button, balance display, and win text.
-
 import { BET_VALUES, DEFAULT_SPEED_INDEX, SPEED_LEVELS, STARTING_BALANCE } from '../config/constants';
 import { PAYLINES } from '../config/paylines';
 import { SYMBOLS, SYMBOL_IDS } from '../config/symbols';
@@ -13,12 +9,10 @@ export type Controls = {
   setWinText(text: string): void;
   setLastWin(amount: number): void;
   onSpin(handler: () => void): void;
-  // Speed control — calls back with the new multiplier whenever the user
-  // taps +/-. The handler is also invoked once on bind with the default.
   onSpeedChange(handler: (multiplier: number) => void): void;
 };
 
-// Wires all HTML controls and returns a Controls interface for Game to drive.
+// Wires all HTML controls and returns a Controls interface
 export function bindControls(): Controls {
   const betDownBtn = document.getElementById('bet-down-btn') as HTMLButtonElement;
   const betUpBtn = document.getElementById('bet-up-btn') as HTMLButtonElement;
@@ -83,6 +77,7 @@ export function bindControls(): Controls {
   // Render paytable so the player knows what they're chasing.
   paytableEl.innerHTML = renderPaytableHtml();
 
+  // Spin handler set by the Game class once it's ready; fires on spin button click or spacebar press.
   let spinHandler: (() => void) | null = null;
   spinBtn.addEventListener('click', () => spinHandler?.());
   document.addEventListener('keydown', (e) => {
@@ -131,8 +126,8 @@ export function bindControls(): Controls {
       betUpBtn.disabled = busy || betIndex === BET_VALUES.length - 1;
       spinBtn.textContent = busy ? 'SPINNING…' : 'SPIN';
       // Speed buttons stay enabled mid-spin so the player can adjust live.
-      speedDownBtn.disabled = speedIndex === 0;
-      speedUpBtn.disabled = speedIndex === SPEED_LEVELS.length - 1;
+      speedDownBtn.disabled = busy || speedIndex === 0;
+      speedUpBtn.disabled = busy || speedIndex === SPEED_LEVELS.length - 1;
     },
     setWinText: (text) => {
       const isError = text === 'Low balance';
@@ -155,7 +150,7 @@ export function bindControls(): Controls {
   };
 }
 
-// Renders the paytable from config data as an HTML string injected into #paytable.
+// Renders the paytable from config data and injects into #paytable.
 function renderPaytableHtml(): string {
   const rows: string[] = [];
 

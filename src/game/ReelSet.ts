@@ -23,6 +23,7 @@ export class ReelSet {
   private readonly reels: Reel[] = [];
   private readonly ticker: Ticker;
   private speedMultiplier = 1;
+  private spinning = false;
 
   constructor(args: {
     app: Application;
@@ -76,21 +77,19 @@ export class ReelSet {
   }
 
   private tick(): void {
-    // Scaling dt globally makes the reel visibly faster AND collapses the
-    // accel/cruise/decel/bounce durations by the same factor. Both effects
-    // are desired for a "Turbo" mode.
-    const dt = (this.ticker.deltaMS / 1000) * this.speedMultiplier;
-    for (const reel of this.reels) reel.update(dt);
+    const deltaTime = (this.ticker.deltaMS / 1000) * this.speedMultiplier;
+    for (const reel of this.reels) reel.update(deltaTime);
   }
 
-  // Settable live; takes effect on the very next tick (mid-spin too).
+  // Speed multiplier affects spin speed and stagger timing
   setSpeedMultiplier(m: number): void {
-    if (!Number.isFinite(m) || m <= 0) return;
+    if (!Number.isFinite(m) || m <= 0 || this.spinning) return;
     this.speedMultiplier = m;
   }
 
   // Starts all reels with a staggered delay to give the cabinet a wave feel.
   async startSpin(): Promise<void> {
+    this.spinning = true;
     const stagger = START_STAGGER_MS / this.speedMultiplier;
     for (let i = 0; i < this.reels.length; i++) {
       const reel = this.reels[i];
@@ -120,6 +119,7 @@ export class ReelSet {
       );
     }
     await Promise.all(promises);
+    this.spinning = false;
   }
 
   get reelCount(): number {

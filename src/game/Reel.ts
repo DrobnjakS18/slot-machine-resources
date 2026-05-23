@@ -116,7 +116,6 @@ export class Reel {
     this.tweenT = 0;
     this.tweenDuration = ACCEL_TIME;
     this.cruiseElapsed = 0;
-    this.pendingStop = null;
   }
 
   // Returns a promise that resolves when the reel comes to rest at `finalStop`.
