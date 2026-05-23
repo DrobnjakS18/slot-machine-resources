@@ -127,6 +127,7 @@ export class Game {
       this.controls.setWinText(String(response.totalWin));
       this.controls.setLastWin(response.totalWin);
       this.winPresenter.show(response.wins);
+      await new Promise(resolve => setTimeout(resolve, 1000));
     } else {
       this.controls.setBalance(response.newBalance);
       this.controls.setWinText('');
