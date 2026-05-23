@@ -9,7 +9,7 @@
 import { REEL_COUNT, ROW_COUNT, STARTING_BALANCE } from '../config/constants';
 import { SymbolId } from '../config/symbols';
 import { buildAllReels } from './reelBuilder';
-import { pickStop, setRngOverride, RngOverride } from './rng';
+import { pickStop } from './rng';
 import { buildWindow, evaluateWindow, Win } from './evaluator';
 
 export type SpinResponse = {

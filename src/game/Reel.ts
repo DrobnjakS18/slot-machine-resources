@@ -25,7 +25,7 @@ type ReelState = 'idle' | 'accelerating' | 'cruising' | 'decelerating' | 'bounci
 
 const CRUISE_SPEED = 32;            // rows per second during cruise
 const ACCEL_TIME = 0.22;            // seconds, 0 → cruise
-const MIN_CRUISE_TIME = 0;          // reels respond to stop immediately; MIN_SPIN_ROWS guarantees min travel
+const MIN_CRUISE_TIME = 0.35;       // each reel must cruise at least this long
 const DECEL_TIME = 0.55;            // seconds for the deceleration tween
 const DECEL_OVERSHOOT_ROWS = 0.55;  // reel slides this far PAST its landing during decel
 const BOUNCE_TIME = 0.36;           // seconds for the bounce-back tween
@@ -108,7 +108,6 @@ export class Reel {
     return this.state === 'idle';
   }
 
-  // Transitions from idle to accelerating; no-op if already spinning.
   startSpin(): void {
     if (this.state !== 'idle') return;
     this.state = 'accelerating';
@@ -233,16 +232,15 @@ export class Reel {
     const frac = this.position - intPos;
     for (let i = 0; i < this.sprites.length; i++) {
       const offsetFromTop = i - 1; // slot 0 is above row 0 → offset -1
-      // Reversed strip reading: row 0 = strip[intPos], row 1 = strip[intPos-1], ...
-      // The buffer slot above (offset -1) shows strip[intPos+1] — the next symbol
-      // to enter from the top as position advances.
-      const stripIndex = ((intPos - offsetFromTop) % stripLen + stripLen) % stripLen;
+      const stripIndex = ((intPos + offsetFromTop) % stripLen + stripLen) % stripLen;
       const symbol = this.strip[stripIndex];
       const sprite = this.sprites[i];
       const tex = this.textures[symbol];
       if (sprite.texture !== tex) sprite.texture = tex;
-      // Sprites move downward as position advances (frac increases toward 1).
-      sprite.y = (offsetFromTop + frac) * this.symbolSize;
+      // y for the slot: each row is symbolSize tall. Slot offsetFromTop sits at
+      // (offsetFromTop - frac) * symbolSize. Frac scrolls everything downward
+      // smoothly as position advances.
+      sprite.y = (offsetFromTop - frac) * this.symbolSize;
     }
   }
 }
