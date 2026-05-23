@@ -71,7 +71,6 @@ export class Game {
     this.controls.onSpin(() => this.handleSpin());
     this.controls.onSpeedChange((m) => this.reelSet.setSpeedMultiplier(m));
     this.controls.setBalance(server.getBalance());
-
   }
 
   // Fires the visual spin and the server call in parallel; settles reels once the response lands.
