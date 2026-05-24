@@ -125,16 +125,17 @@ export function bindControls(): Controls {
       betDownBtn.disabled = busy || betIndex === 0;
       betUpBtn.disabled = busy || betIndex === BET_VALUES.length - 1;
       spinBtn.textContent = busy ? 'SPINNING…' : 'SPIN';
-      // Speed buttons stay enabled mid-spin so the player can adjust live.
       speedDownBtn.disabled = busy || speedIndex === 0;
       speedUpBtn.disabled = busy || speedIndex === SPEED_LEVELS.length - 1;
     },
     setWinText: (text) => {
-      const isError = text === 'Low balance';
+      const isError = text === 'Low balance' || text === 'Server error';
       const isEmpty = text === '';
       winEl.classList.toggle('error', isError);
-      if (isEmpty || isError) {
+      if (isEmpty) {
         winEl.textContent = text;
+      } else if (isError) {
+        winEl.innerHTML = `<span class="win-label">&nbsp;</span><span class="win-amount error">${text}</span>`;
       } else {
         winEl.innerHTML = `<span class="win-label">win</span><span class="win-amount">${text}</span>`;
       }
