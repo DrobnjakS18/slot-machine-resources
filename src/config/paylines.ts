@@ -3,7 +3,7 @@
 //
 // Adding/removing a payline = edit this file, no code changes.
 
-export type Cell = { reel: number; row: number };
+type Cell = { reel: number; row: number };
 
 export type Payline = {
   id: number;

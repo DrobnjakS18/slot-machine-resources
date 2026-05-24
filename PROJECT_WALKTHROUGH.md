@@ -99,10 +99,9 @@ left to right. Adding a payline = append to this array, no code changes.
 ### Server layer — `src/server/` (game math, no PixiJS)
 
 **[server/randomNumberGenerator.ts](src/server/randomNumberGenerator.ts)**
-Thin randomness wrapper. `pickStop()` returns a random stop index per reel; it first
-checks an optional override hook (the debug/test seam via `setRngOverride`) before falling
-back to `Math.random()`. Also exports an unbiased Fisher–Yates `shuffle`. **The swap
-point:** to go to real-money-grade randomness you replace `Math.random()` here with
+Thin randomness wrapper. `pickStop()` returns a random stop index per reel using
+`Math.random()`. Also exports an unbiased Fisher–Yates `shuffle`. **The swap point:** to
+go to real-money-grade randomness you replace `Math.random()` here with
 `crypto.getRandomValues` and nothing else changes.
 
 **[server/reelBuilder.ts](src/server/reelBuilder.ts)**
@@ -205,8 +204,3 @@ wave (using the shared ticker) so coinciding wins are readable, and loops while 
 
 ---
 
-## 5. Debug seam
-
-A programmatic RNG override hook (`setRngOverride` in `randomNumberGenerator.ts`) allows
-tests or manual verification to force specific reel stops without any UI. There is no
-`DebugPanel.ts` or debug checkbox — the hook is purely a code-level test seam.

@@ -223,5 +223,4 @@ Transparent overlay above the reels. On win: draws rounded rect highlights on ea
 
 - RTP target is ~96% (approximate demo math — not certified).
 - `Math.random()` is used for RNG (fine for a demo; see swap point above).
-- The debug seam (`setRngOverride` in `randomNumberGenerator.ts`) has no UI — it is a programmatic test hook only.
 - No bonus symbols, scatters, or free spins — out of scope per the brief.

@@ -74,7 +74,7 @@ export function getResponseData(bet: number): Promise<SpinResponse> {
       balance -= bet;
 
       const stops: number[] = [];
-      for (let r = 0; r < REEL_COUNT; r++) stops.push(pickStop(r, reels[r].length));
+      for (let r = 0; r < REEL_COUNT; r++) stops.push(pickStop(reels[r].length));
       const window = buildWindow(reels, stops);
       const wins = evaluateWindow(window, bet);
       const totalWin = wins.reduce((s, w) => s + w.payout, 0);
