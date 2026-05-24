@@ -198,16 +198,6 @@ button:disabled {
     opacity: 1;
   }
 }
-.debug-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-}
-.debug-grid input {
-  width: 100%;
-  padding: 4px;
-  font-size: 12px;
-}
 details summary {
   cursor: pointer;
   color: #9fb0d0;
@@ -348,15 +338,6 @@ details summary {
 .bet-label-btn:hover:not(:disabled) {
   background: #25304a;
   border-color: #ffd166;
-}
-.bet-ctrl-sub {
-  display: block;
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #6b7a99;
-  line-height: 1;
 }
 #bet-label {
   display: block;

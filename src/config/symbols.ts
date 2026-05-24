@@ -28,7 +28,3 @@ export const SYMBOLS: Record<SymbolId, SymbolMeta> = {
 };
 
 export const SYMBOL_IDS: SymbolId[] = Object.keys(SYMBOLS) as SymbolId[];
-
-export function reelLength(reelIndex: number): number {
-  return SYMBOL_IDS.reduce((sum, id) => sum + SYMBOLS[id].frequency[reelIndex], 0);
-}

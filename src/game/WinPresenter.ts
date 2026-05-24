@@ -24,11 +24,6 @@ export class WinPresenter {
     this.ticker.add(this.tick, this);
   }
 
-  destroy(): void {
-    this.ticker.remove(this.tick, this);
-    this.container.destroy({ children: true });
-  }
-
   // Stores the win list and starts the pulse animation from the beginning.
   show(wins: Win[]): void {
     this.wins = wins;

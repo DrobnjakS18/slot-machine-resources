@@ -1,16 +1,4 @@
-export type RngOverride = (reelIndex: number) => number | null | undefined;
-
-let override: RngOverride | null = null;
-
-export function setRngOverride(fn: RngOverride | null): void {
-  override = fn;
-}
-
-export function pickStop(reelIndex: number, reelLen: number): number {
-  const forced = override?.(reelIndex);
-  if (typeof forced === 'number' && forced >= 0 && forced < reelLen) {
-    return forced;
-  }
+export function pickStop(reelLen: number): number {
   return Math.floor(Math.random() * reelLen);
 }
 

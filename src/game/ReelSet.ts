@@ -17,8 +17,6 @@ const STOP_STAGGER_MS = 300;
 export class ReelSet {
   readonly container: Container;
   readonly symbolSize: number;
-  readonly width: number;
-  readonly height: number;
 
   private readonly reels: Reel[] = [];
   private readonly ticker: Ticker;
@@ -47,9 +45,6 @@ export class ReelSet {
     frame.endFill();
     this.container.addChild(frame);
 
-    this.width = totalW;
-    this.height = totalH;
-
     // Build reels.
     for (let r = 0; r < REEL_COUNT; r++) {
       const reel = new Reel({
@@ -69,11 +64,6 @@ export class ReelSet {
     // Single ticker drives all reels.
     this.ticker = args.app.ticker;
     this.ticker.add(this.tick, this);
-  }
-
-  destroy(): void {
-    this.ticker.remove(this.tick, this);
-    this.container.destroy({ children: true });
   }
 
   private tick(): void {
@@ -118,10 +108,6 @@ export class ReelSet {
     }
     await Promise.all(promises);
     this.spinning = false;
-  }
-
-  get reelCount(): number {
-    return this.reels.length;
   }
 
   // For the WinPresenter to query absolute screen coords for a [reel, row] cell.
