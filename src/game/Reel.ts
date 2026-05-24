@@ -44,7 +44,7 @@ export class Reel {
   private tweenDuration = 0;
   private tweenFromPos = 0;
   private tweenToPos = 0;
-  private landingTarget = 0;        // the position the reel must settle on (no overshoot)
+  private landingTarget = 0;      
   private cruiseElapsed = 0;
   private pendingStop: number | null = null;
 
@@ -66,7 +66,7 @@ export class Reel {
     this.position = args.initialStop;
 
     this.container = new Container();
-    // Clip to play window so buffer sprites above/below stay hidden.
+
     const mask = new Graphics();
     mask.beginFill(0xffffff);
     mask.drawRect(0, 0, this.symbolSize, this.symbolSize * this.rowCount);
