@@ -60,13 +60,13 @@ The client only calls `getResponseData(bet)` on the mock server — the same con
 
 | Symbol | Label | Type | 3x | 4x | 5x |
 |---|---|---|---|---|---|
-| WD | WILD | Wild | — | — | — |
-| A  | A    | High | 10 | 50 | 200 |
-| K  | K    | High | 8  | 30 | 150 |
-| Q  | Q    | Mid  | 5  | 20 | 100 |
-| J  | J    | Mid  | 3  | 12 | 60  |
-| TEN | 10  | Low  | 2  | 8  | 40  |
-| NINE | 9  | Low  | 2  | 6  | 30  |
+| WD   | WILD | Wild | —  | —  | —  |
+| A    | A    | High |  4 | 16 | 50 |
+| K    | K    | High |  3 | 12 | 33 |
+| Q    | Q    | Mid  |  2 |  8 | 25 |
+| J    | J    | Mid  |  2 |  8 | 17 |
+| TEN  | 10   | Low  |  1 |  4 | 17 |
+| NINE | 9    | Low  |  1 |  4 | 10 |
 
 Pays shown in credits per 1-credit bet.
 
