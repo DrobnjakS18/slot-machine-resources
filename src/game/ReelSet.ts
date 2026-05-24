@@ -1,7 +1,7 @@
 // Orchestrates the 5 reels: layout, staggered start, single ticker.
 //
 // Per reel: spin starts with an 80ms stagger so the cabinet has a wave feel.
-// On stop, we resolve each reel to its assigned stop with another 110ms stagger.
+// On stop, we resolve each reel to its assigned stop with another 300ms stagger.
 
 import { Application, Container, Graphics, Ticker } from 'pixi.js';
 import { REEL_COUNT, ROW_COUNT } from '../config/constants';
@@ -95,8 +95,6 @@ export class ReelSet {
       const reel = this.reels[i];
       setTimeout(() => reel.startSpin(), i * stagger);
     }
-    // Resolve immediately — the spin is in progress; the orchestrator will
-    // call stopAt(stops) once the server response arrives.
   }
 
   // Stops each reel at the given stop index, with a per-reel stagger.

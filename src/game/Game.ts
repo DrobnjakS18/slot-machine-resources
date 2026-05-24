@@ -37,7 +37,6 @@ export class Game {
     new ResizeObserver(() => this.fitToContainer(wrap)).observe(wrap);
   }
 
-  // Scales the canvas uniformly so the game fills the wrapper without overflow or distortion.
   private fitToContainer(wrap: HTMLElement): void {
     const availW = wrap.clientWidth;
     const availH = wrap.clientHeight;
@@ -47,11 +46,9 @@ export class Game {
     this.app.stage.scale.set(scale);
   }
 
-  // Bootstraps textures, reels, win overlay, and control bindings; called once after construction.
   async start(): Promise<void> {
     const info = server.getReelInfo();
     const textures = buildSymbolTextures(this.app, this.responsiveSymbolSize);
-    // debugger
 
     this.reelSet = new ReelSet({
       app: this.app,
@@ -73,7 +70,7 @@ export class Game {
     this.controls.setBalance(server.getBalance());
   }
 
-  // Fires the visual spin and the server call in parallel; settles reels once the response lands.
+  // Visual spin and server call run in parallel; reels settle once the response lands.
   private async handleSpin(): Promise<void> {
     if (this.busy) return;
     this.busy = true;
@@ -91,18 +88,15 @@ export class Game {
         return;
       }
 
-      // Deduct optimistically so the balance updates on click.
       this.controls.setBalance(server.getBalance() - bet);
 
-      // Start the visual spin immediately, then fire the server call in parallel.
-      // Reels will be cruising by the time the response lands and stopAt is called.
+      // Spin starts immediately; server response arrives while reels are already cruising.
       this.reelSet.startSpin();
 
       let response;
       try {
         response = await server.getResponseData(bet);
       } catch (err) {
-        console.error(err);
         await this.reelSet.stopAt(new Array(REEL_COUNT).fill(0));
         this.controls.setBalance(server.getBalance());
         this.controls.setWinText('Server error');

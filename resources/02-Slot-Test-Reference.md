@@ -396,8 +396,6 @@ Sources: KseniiaPrytkova repo (debug mode pattern); Easy Vegas server flow; kld.
 
 **"What's a PAR sheet?"** The math team's blueprint. Lists reel composition, paytable, computed RTP, hit frequency, volatility. Devs build from it.
 
-**"What if the player disconnects mid-spin?"** Server-authoritative design: log result with "not yet seen" flag; on reconnect, replay the animation and clear the flag.
-
 Sources: Easy Vegas Returns, Easy Vegas "How to Program"; Muir Ch. 2; common sense.
 
 ---

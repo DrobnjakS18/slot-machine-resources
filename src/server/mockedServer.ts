@@ -1,15 +1,9 @@
-// The "server" module. Self-contained: no PixiJS imports.
-//
-// Public surface intentionally small — the client only calls getResponseData(bet).
-// Everything else (reelstrips, balance, RNG) is server-owned state.
-//
-// The response shape mirrors what a real slot service would return so the
-// client doesn't know it's talking to an in-process mock (md §9).
+// No PixiJS imports — intentional separation. Public surface: getResponseData(bet).
 
 import { REEL_COUNT, ROW_COUNT, STARTING_BALANCE } from '../config/constants';
 import { SymbolId } from '../config/symbols';
 import { buildAllReels } from './reelBuilder';
-import { pickStop } from './rng';
+import { pickStop } from './randomNumberGenerator';
 import { buildWindow, evaluateWindow, Win } from './evaluator';
 
 export type SpinResponse = {
@@ -35,7 +29,6 @@ let spinCounter = 0;
 
 function nextSpinId(): string {
   spinCounter++;
-  // Tiny readable id; not security-sensitive.
   return `${Date.now().toString(36)}-${spinCounter.toString(36)}`;
 }
 
@@ -44,7 +37,7 @@ function fakeLatencyMs(): number {
   return 80 + Math.random() * 120;
 }
 
-// Returns defensive copies of reelstrips so the client can't mutate server state.
+// Defensive copies — client must not mutate server-owned reelstrips.
 export function getReelInfo(): ReelInfo {
   return {
     reels: reels.map((r) => r.slice()),
@@ -53,12 +46,10 @@ export function getReelInfo(): ReelInfo {
   };
 }
 
-// Returns current server-side balance.
 export function getBalance(): number {
   return balance;
 }
 
-// Main spin API: validates bet, deducts balance, picks stops, evaluates wins, returns SpinResponse.
 export function getResponseData(bet: number): Promise<SpinResponse> {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -79,7 +70,7 @@ export function getResponseData(bet: number): Promise<SpinResponse> {
         return;
       }
 
-      // Charge the bet first — a real server would do this in a transaction.
+      // Charge the bet first, then determine the outcome. 
       balance -= bet;
 
       const stops: number[] = [];

@@ -1,29 +1,19 @@
-// Symbol catalog and per-reel composition for the demo PAR sheet.
-//
-// Design choices, in case an interviewer asks:
-//  - 7 symbols, no bonus / scatter / free-spins. Out of scope per the brief.
-//  - "WD" is a wild that substitutes for any HIGH/LOW symbol (not for itself in lookup).
-//  - Per-reel `frequency` controls reel composition (Mariana-style; md §16.6).
-//  - `pays` indexed by [3-of-a-kind, 4-of-a-kind, 5-of-a-kind] -> credits per 1-credit bet.
-//  - RTP target ~96%. Calibration is approximate — the brief doesn't require certified math.
-
 export type SymbolId =
-  | 'WD'  // wild
-  | 'A'   // high
-  | 'K'   // high
-  | 'Q'   // mid
-  | 'J'   // mid
-  | 'TEN' // low
-  | 'NINE'; // low
+  | 'WD'  
+  | 'A'   
+  | 'K'   
+  | 'Q'   
+  | 'J'   
+  | 'TEN' 
+  | 'NINE'; 
 
 export type SymbolMeta = {
   id: SymbolId;
   label: string;
-  color: number;       // PixiJS fill color used by the procedural texture
+  color: number; 
   textColor: number;
   frequency: [number, number, number, number, number];
-  // Pays for [3, 4, 5] of a kind on a payline, in credits per credit bet.
-  pays: [number, number, number];
+  pays: [number, number, number];   // Pays for [3, 4, 5] of a kind on a payline, in credits per credit bet.
   isWild?: boolean;
 };
 

@@ -1,15 +1,4 @@
-// Pure win evaluator. Input: a window of symbols. Output: a list of wins.
-//
-// Algorithm (md §16.3):
-//  For each payline, walk cells left-to-right.
-//   - Track currentSymbolType, currentCount.
-//   - Wild matches anything; on first wild, currentSymbolType stays "WILD-pending"
-//     until a concrete symbol resolves it, then it upgrades.
-//   - Stop walking on the first mismatch; emit a win if currentCount >= MIN_MATCH.
-//   - Highest-pays prioritization is implicit: there's only one rule per symbol
-//     (the [3,4,5] pays array), so the longest run automatically pays the most.
-//
-// Returns the win plus the exact [reel, row] positions to highlight.
+// Payline evaluator. Walk each payline left-to-right; wild matches anything.
 
 import { MIN_MATCH, ROW_COUNT } from '../config/constants';
 import { PAYLINES, Payline } from '../config/paylines';
@@ -35,7 +24,7 @@ function payoutFor(symbol: SymbolId, count: number, bet: number): number {
 }
 
 function evaluatePayline(line: Payline, window: SymbolWindow, bet: number): Win | null {
-  let runSymbol: SymbolId | null = null; // null = "still all-wild, undetermined"
+  let runSymbol: SymbolId | null = null;
   let runCount = 0;
   const positions: [number, number][] = [];
 
@@ -51,8 +40,6 @@ function evaluatePayline(line: Payline, window: SymbolWindow, bet: number): Win 
       continue;
     }
 
-    // Match if: wild (matches anything), or first concrete after a wild streak,
-    // or same symbol as the resolved run.
     if (isWild || runSymbol === null || sym === runSymbol) {
       if (runSymbol === null && !isWild) runSymbol = sym; // wild streak resolves to first concrete
       runCount++;
@@ -62,7 +49,7 @@ function evaluatePayline(line: Payline, window: SymbolWindow, bet: number): Win 
     }
   }
 
-  // An all-wild run never resolves to a concrete symbol. Pay it as wild.
+  // Unresolved all-wild run: pay as 'WD'.
   const finalSymbol: SymbolId = runSymbol ?? 'WD';
 
   if (runCount < MIN_MATCH) return null;
@@ -89,7 +76,6 @@ export function evaluateWindow(window: SymbolWindow, bet: number): Win[] {
   return wins;
 }
 
-// Helper used by mockedServer to assemble the window from reels + stops.
 export function buildWindow(reels: SymbolId[][], stops: number[]): SymbolWindow {
   return reels.map((reel, r) => {
     const stop = stops[r];

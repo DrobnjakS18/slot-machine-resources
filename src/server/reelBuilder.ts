@@ -1,12 +1,8 @@
 // Builds the reelstrips from the configured symbol frequencies.
-//
-// Per md §16.6: for each reel, push N copies of each symbol where N = its
-// frequency on that reel, then Fisher-Yates shuffle. The shuffled array
-// IS the reelstrip — stable across spins, indexed by the chosen stop.
 
 import { REEL_COUNT } from '../config/constants';
 import { SYMBOLS, SYMBOL_IDS, SymbolId } from '../config/symbols';
-import { shuffleFisherYates } from './rng';
+import { shuffle } from './randomNumberGenerator';
 
 export function buildReel(reelIndex: number): SymbolId[] {
   const strip: SymbolId[] = [];
@@ -14,7 +10,7 @@ export function buildReel(reelIndex: number): SymbolId[] {
     const count = SYMBOLS[id].frequency[reelIndex];
     for (let i = 0; i < count; i++) strip.push(id);
   }
-  return shuffleFisherYates(strip);
+  return shuffle(strip);
 }
 
 export function buildAllReels(): SymbolId[][] {
