@@ -34,17 +34,18 @@ igt-slot-demo/
     │   ├── symbols.ts      # PAR sheet: symbol catalog, colors, frequencies, pays
     │   └── paylines.ts     # 5 payline definitions as plain data
     ├── server/             # Game math — ZERO PixiJS imports
-    │   ├── rng.ts          # Math.random() wrapper + Fisher-Yates shuffle
+    │   ├── randomNumberGenerator.ts  # Math.random() wrapper + Fisher-Yates shuffle
     │   ├── reelBuilder.ts  # Builds reelstrips from frequency tables
     │   ├── evaluator.ts    # Pure win evaluator (payline walk + wild logic)
     │   └── mockedServer.ts # Public API: getResponseData(bet), balance, spin IDs
     └── game/               # Rendering + input (PixiJS)
         ├── Game.ts         # Conductor: canvas sizing, spin choreography, busy guard
-        ├── BetSelector.ts  # HTML controls (bet select, spin btn, speed +/−, paytable)
+        ├── BetSelector.ts  # HTML controls (bet popup, spin btn, speed +/−, paytable)
         ├── Reel.ts         # Single reel: sprites + state machine (accel/cruise/decel/bounce)
         ├── ReelSet.ts      # 5-reel orchestrator: frame, layout, shared ticker, stagger
         ├── SymbolTextures.ts  # Procedural RenderTexture per symbol (no art files)
-        └── WinPresenter.ts # Pulsing win overlay (cell highlights + payline path)
+        ├── WinPresenter.ts # Pulsing win overlay (cell highlights + payline path)
+        └── utils.ts        # Game-layer utilities (computeSymbolSize)
 ```
 
 ---
@@ -104,7 +105,7 @@ WD is wild (substitutes for any non-wild symbol). Adding a symbol = edit this fi
 | 3  | V      | `#118ab2` | 0,1,2,1,0 (V shape)              |
 | 4  | Caret  | `#9b5de5` | 2,1,0,1,2 (∧ shape)              |
 
-### `src/server/rng.ts`
+### `src/server/randomNumberGenerator.ts`
 Thin wrapper around `Math.random()`. `pickStop(reelIndex, reelLen)` first checks an optional override hook (the debug/test seam), then falls back to random. Fisher-Yates shuffle lives here. **The swap point:** to use production-grade randomness, replace `Math.random()` in this file only — nothing else changes.
 
 ### `src/server/reelBuilder.ts`
@@ -131,14 +132,17 @@ The **only** file the client talks to for game results. Owns server-side state: 
 
 Returns defensive copies of reelstrips so the client can't mutate server state.
 
+### `src/game/utils.ts`
+Game-layer utility functions. `computeSymbolSize(wrap)` calculates the largest square symbol size that fits the grid inside the wrapper element, clamped between 60 px and `MAX_SYMBOL_SIZE`. Called once in `Game` constructor; `ResizeObserver` re-calls it on resize.
+
 ### `src/game/Game.ts`
 The conductor. Responsibilities:
-- **Canvas sizing**: `computeSymbolSize()` fits the grid to the container (`MAX_SYMBOL_SIZE = 240`, `GAP = 8`, `PADDING = 14`). `ResizeObserver` re-fits on resize via `fitToContainer()`.
-- **Bootstrap** (`start()`): gets reel info from server, builds textures, creates `ReelSet` + `WinPresenter`, binds controls.
-- **Spin choreography** (`handleSpin()`): `busy` flag prevents double-spins. Kicks off `reelSet.startSpin()` and `server.getResponseData(bet)` **in parallel** — reels cruise until the response lands, so there's never a visible freeze. Handles insufficient balance and server errors.
+- **Canvas sizing**: delegates to `computeSymbolSize()` in `utils.ts`. `ResizeObserver` re-fits on resize via `fitToContainer()`.
+- **Bootstrap** (`start()`): gets reel info from server, builds textures, creates `ReelSet` + `WinPresenter`, binds controls via `bindControls()`.
+- **Spin choreography** (`handleSpin()`): `busy` flag prevents double-spins. Kicks off `reelSet.startSpin()` and `server.getResponseData(bet)` **in parallel** — reels cruise until the response lands, so there's never a visible freeze. Handles insufficient balance and server errors. Calls `setLastWin` on wins.
 
 ### `src/game/BetSelector.ts`
-All HTML controls, deliberately outside PixiJS so they're CSS-styleable and accessible. Populates bet `<select>` from `BET_VALUES`, renders the paytable from config, wires speed +/− buttons. Exposes a `Controls` interface: `getBet`, `setBalance`, `setBusy`, `setWinText`, `onSpin`, `onSpeedChange`. `Game` never touches the DOM directly.
+All HTML controls, deliberately outside PixiJS so they're CSS-styleable and accessible. Bet is selected via `±` step buttons (`#bet-down-btn` / `#bet-up-btn`) or a popup grid (`#bet-popup-overlay`, `#bet-popup-grid`) opened by clicking the bet label button (`#bet-label-btn`). Renders the paytable from config, wires speed +/− buttons. Spacebar triggers spin. Exposes a `Controls` interface: `getBet`, `setBalance`, `setBusy`, `setWinText`, `setLastWin`, `onSpin`, `onSpeedChange`. `Game` never touches the DOM directly.
 
 ### `src/game/Reel.ts`
 Single reel: sprite pool + spin state machine. States:
@@ -155,7 +159,7 @@ Key constants:
 Uses `rowCount + 2` sprite slots (buffer above + below). Each frame: texture swap + y-position update. No rebuilds. `requestStop(finalStop)` returns a Promise resolved when the reel comes to rest.
 
 ### `src/game/ReelSet.ts`
-Orchestrates all 5 reels. Draws the cabinet frame (`lineStyle: 3px #ffd166 0.85α, fill: #10162a`, `borderRadius: 14`). One shared ticker drives all reels; `dt` is scaled by `speedMultiplier` so Turbo speeds up both motion and timing. Stagger: 80 ms start, 110 ms stop (both divided by speedMultiplier). `stopAt()` resolves when **all** reels are at rest. `cellPosition(reel, row)` gives the WinPresenter screen coords.
+Orchestrates all 5 reels. Draws the cabinet frame (`lineStyle: 3px #ffd166 0.85α, fill: #10162a`, `borderRadius: 14`). One shared ticker drives all reels; `dt` is scaled by `speedMultiplier` so Turbo speeds up both motion and timing. Stagger: 80 ms start, 300 ms stop (both divided by speedMultiplier; stop stagger collapses to 0 at Turbo, i.e. speedMultiplier ≥ 4). `stopAt()` resolves when **all** reels are at rest. `cellPosition(reel, row)` gives the WinPresenter screen coords.
 
 ### `src/game/SymbolTextures.ts`
 Generates each symbol's `RenderTexture` procedurally — no external art. Each symbol is a rounded card (`radius = size * 0.12`, `inset = size * 0.06`) with:
@@ -198,7 +202,7 @@ Transparent overlay above the reels. On win: draws rounded rect highlights on ea
 - `#stage-wrap` → `#stage` — PixiJS canvas mounts here
 - `#side` — right panel
   - `.panel` Balance: `#balance` (large gold number) + `#win-text` (teal)
-  - `.panel` Controls: bet `#bet-select`, speed `#speed-down-btn` / `#speed-label` / `#speed-up-btn`, `#spin-btn`
+  - `.panel` Controls: bet `#bet-down-btn` / `#bet-label-btn` (`#bet-label`) / `#bet-up-btn` + popup (`#bet-popup-overlay`, `#bet-popup-grid`, `#bet-popup-close`), speed `#speed-down-btn` / `#speed-label` / `#speed-up-btn`, `#spin-btn`, `#last-win`
   - `.panel` Paytable: `#paytable` (populated by BetSelector from config data)
 
 ---
@@ -207,7 +211,7 @@ Transparent overlay above the reels. On win: draws rounded rect highlights on ea
 
 1. **Swappable server boundary** — `server/` has zero PixiJS imports. `getResponseData()` returns a real-shaped `SpinResponse`. The client is fully decoupled.
 2. **Data-driven PAR sheet** — adding a symbol or payline is a data edit in `config/`, no code changes.
-3. **Single RNG swap point** — `Math.random()` lives only in `rng.ts`. Production crypto-RNG is a one-file change.
+3. **Single RNG swap point** — `Math.random()` lives only in `randomNumberGenerator.ts`. Production crypto-RNG is a one-file change.
 4. **Concurrent spin + fetch** — reels cruise until the response lands, so network latency is never a visible freeze.
 5. **Procedural textures** — zero art assets; crisp at any resolution; fully self-contained build.
 6. **Reel physics for feel** — overshoot + `backOut` bounce reproduces the mechanical-reel thunk. One shared ticker makes Turbo mode trivial (scale `dt`).
@@ -217,7 +221,7 @@ Transparent overlay above the reels. On win: draws rounded rect highlights on ea
 
 ## Known notes / caveats
 
-- `README.md` references a `DebugPanel.ts` and a debug checkbox UI that no longer exist in source. The debug **seam** still exists (`rng.setRngOverride` / `mockedServer.setForceStops`) but there is no UI for it. Reconcile before presenting.
 - RTP target is ~96% (approximate demo math — not certified).
 - `Math.random()` is used for RNG (fine for a demo; see swap point above).
+- The debug seam (`setRngOverride` in `randomNumberGenerator.ts`) has no UI — it is a programmatic test hook only.
 - No bonus symbols, scatters, or free spins — out of scope per the brief.

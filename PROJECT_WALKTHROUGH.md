@@ -35,7 +35,7 @@ This is the story to tell when walking someone through the project. Each step na
 the file doing the work.
 
 1. **Page loads** → [index.html](index.html) provides the DOM skeleton (`#stage`,
-   bet select, spin button, paytable). The `<script>` boots [src/index.ts](src/index.ts).
+   bet controls, spin button, paytable). The `<script>` boots [src/index.ts](src/index.ts).
 
 2. **Bootstrap** → [src/index.ts](src/index.ts) finds `#stage`, constructs `Game`,
    calls `game.start()`.
@@ -55,12 +55,13 @@ the file doing the work.
 
 6. **The server computes the result** → [server/mockedServer.ts](src/server/mockedServer.ts):
    validates the bet, charges the balance, picks a random stop per reel
-   ([server/rng.ts](src/server/rng.ts)), builds the visible window, and evaluates wins
-   ([server/evaluator.ts](src/server/evaluator.ts)). Returns a `SpinResponse` after a
-   simulated network delay.
+   ([server/randomNumberGenerator.ts](src/server/randomNumberGenerator.ts)), builds the
+   visible window, and evaluates wins ([server/evaluator.ts](src/server/evaluator.ts)).
+   Returns a `SpinResponse` after a simulated network delay.
 
 7. **Reels land on the real result** → `ReelSet.stopAt(response.reelStops)` tells each
-   reel to decelerate, overshoot, and bounce onto its assigned stop (110 ms stagger).
+   reel to decelerate, overshoot, and bounce onto its assigned stop (300 ms stagger;
+   collapses to 0 at Turbo).
 
 8. **Win presentation** → if `totalWin > 0`, [game/WinPresenter.ts](src/game/WinPresenter.ts)
    pulses highlights over the winning cells and draws the payline path; the balance and
@@ -97,11 +98,11 @@ left to right. Adding a payline = append to this array, no code changes.
 
 ### Server layer — `src/server/` (game math, no PixiJS)
 
-**[server/rng.ts](src/server/rng.ts)**
+**[server/randomNumberGenerator.ts](src/server/randomNumberGenerator.ts)**
 Thin randomness wrapper. `pickStop()` returns a random stop index per reel; it first
-checks an optional override hook (the documented debug/test seam) before falling back to
-`Math.random()`. Also exports an unbiased Fisher–Yates `shuffle`. **The swap point:** to
-go to real-money-grade randomness you replace `Math.random()` here with
+checks an optional override hook (the debug/test seam via `setRngOverride`) before falling
+back to `Math.random()`. Also exports an unbiased Fisher–Yates `shuffle`. **The swap
+point:** to go to real-money-grade randomness you replace `Math.random()` here with
 `crypto.getRandomValues` and nothing else changes.
 
 **[server/reelBuilder.ts](src/server/reelBuilder.ts)**
@@ -124,24 +125,31 @@ server-side state: the reelstrips, the balance, the spin counter. `getResponseDa
 validates the bet, charges the balance, rolls stops, evaluates wins, credits winnings,
 and resolves a `SpinResponse` after a fake 80–200 ms latency (to exercise the client's
 loading state). `getReelInfo()` hands the client *defensive copies* of the strips so it
-can't mutate server data. `getBalance()` and `setForceStops()` round out the surface.
+can't mutate server data. `getBalance()` rounds out the public surface.
 
 ### Game layer — `src/game/` (rendering + input, PixiJS)
 
+**[game/utils.ts](src/game/utils.ts)**
+Game-layer utility functions. `computeSymbolSize(wrap)` calculates the largest square
+symbol size that fits the 5×3 grid in the wrapper element, clamped between 60 px and
+`MAX_SYMBOL_SIZE`. Extracted here so `Game.ts` stays focused on orchestration.
+
 **[game/Game.ts](src/game/Game.ts)**
-The conductor. Mounted by `index.ts`. Sizes the PixiJS canvas responsively (computes
-symbol size, fits to container, re-fits on resize via `ResizeObserver`). In `start()` it
-wires everything together; in `handleSpin()` it runs the spin choreography from §2 —
-guarding against double-spins with a `busy` flag, handling errors (insufficient balance,
-server error), and driving win text + presentation. This is the file that orchestrates
-the parallel "spin visuals + server call" dance.
+The conductor. Mounted by `index.ts`. Sizes the PixiJS canvas responsively using
+`computeSymbolSize()` from `utils.ts`, fits to container, re-fits on resize via
+`ResizeObserver`. In `start()` it wires everything together; in `handleSpin()` it runs
+the spin choreography from §2 — guarding against double-spins with a `busy` flag,
+handling errors (insufficient balance, server error), and driving win text, balance, and
+`setLastWin`. This is the file that orchestrates the parallel "spin visuals + server
+call" dance.
 
 **[game/BetSelector.ts](src/game/BetSelector.ts)**
 The HTML controls, deliberately kept *out* of the PixiJS layer so they're CSS-styleable
-and accessible. Populates the bet dropdown and paytable from config, wires the spin
-button and speed +/- buttons, and exposes a clean `Controls` interface
-(`getBet`, `setBalance`, `setBusy`, `setWinText`, `onSpin`, `onSpeedChange`) so `Game`
-never touches the DOM directly.
+and accessible. Bet is selected via `±` step buttons or a popup grid that opens when the
+player clicks the bet label — no `<select>` element. Renders the paytable from config,
+wires the spin button (also triggered by spacebar) and speed +/- buttons, and exposes a
+clean `Controls` interface (`getBet`, `setBalance`, `setBusy`, `setWinText`, `setLastWin`,
+`onSpin`, `onSpeedChange`) so `Game` never touches the DOM directly.
 
 **[game/SymbolTextures.ts](src/game/SymbolTextures.ts)**
 Generates each symbol's texture procedurally with PixiJS `Graphics` — a colored rounded
@@ -161,8 +169,8 @@ a promise that resolves when the reel comes to rest.
 Orchestrates the 5 reels: draws the frame, lays out and constructs each `Reel`, and runs
 *one shared ticker* that drives them all (scaling `dt` by the speed multiplier so Turbo
 mode speeds up both motion and timing). `startSpin()` staggers reel starts (80 ms);
-`stopAt(stops)` staggers stops (110 ms) and resolves once all reels rest.
-`cellPosition()` lets the `WinPresenter` look up screen coords for any cell.
+`stopAt(stops)` staggers stops (300 ms, collapsed to 0 at Turbo) and resolves once all
+reels rest. `cellPosition()` lets the `WinPresenter` look up screen coords for any cell.
 
 **[game/WinPresenter.ts](src/game/WinPresenter.ts)**
 Draws the win feedback on a transparent overlay above the reels: rounded highlights on
@@ -186,8 +194,8 @@ wave (using the shared ticker) so coinciding wins are readable, and loops while 
   `SpinResponse`. The client is decoupled from local state.
 - **Data-driven PAR sheet** — symbols, pays, paylines, and grid size live in `config/`.
   Reshaping the game is a data edit, not a code change.
-- **Single RNG swap point** — `Math.random()` lives in one file; production crypto-RNG is
-  a one-file change.
+- **Single RNG swap point** — `Math.random()` lives in `randomNumberGenerator.ts` only;
+  production crypto-RNG is a one-file change.
 - **Concurrent spin + fetch** — reels cruise until the response lands, so latency is never
   a visible freeze.
 - **Self-contained visuals** — procedural textures mean zero art assets and crisp
@@ -197,10 +205,8 @@ wave (using the shared ticker) so coinciding wins are readable, and loops while 
 
 ---
 
-## 5. Doc note
+## 5. Debug seam
 
-The repo `README.md` lists a `DebugPanel.ts` and describes a debug checkbox UI. The debug
-*seam* still exists in code (`rng.setRngOverride` / `mockedServer.setForceStops`), but the
-current source has no `DebugPanel.ts` — the controls file is `BetSelector.ts` and the
-HTML has no debug checkbox. Worth reconciling the README before presenting so it matches
-the shipped code.
+A programmatic RNG override hook (`setRngOverride` in `randomNumberGenerator.ts`) allows
+tests or manual verification to force specific reel stops without any UI. There is no
+`DebugPanel.ts` or debug checkbox — the hook is purely a code-level test seam.
