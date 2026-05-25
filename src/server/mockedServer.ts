@@ -32,7 +32,7 @@ function nextSpinId(): string {
   return `${Date.now().toString(36)}-${spinCounter.toString(36)}`;
 }
 
-// Simulated network round-trip so the client's loading state is exercised.
+// simulated latency exercises client loading state
 function fakeLatencyMs(): number {
   return 80 + Math.random() * 120;
 }
@@ -51,7 +51,7 @@ export function getBalance(): number {
 }
 
 export function getResponseData(bet: number): Promise<SpinResponse> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (!Number.isFinite(bet) || bet <= 0) {
         resolve({
@@ -70,25 +70,31 @@ export function getResponseData(bet: number): Promise<SpinResponse> {
         return;
       }
 
-      // Charge the bet first, then determine the outcome. 
+      // Charge the bet first, then determine the outcome.
       balance -= bet;
 
-      const stops: number[] = [];
-      for (let r = 0; r < REEL_COUNT; r++) stops.push(pickStop(reels[r].length));
-      const window = buildWindow(reels, stops);
-      const wins = evaluateWindow(window, bet);
-      const totalWin = wins.reduce((s, w) => s + w.payout, 0);
-      balance += totalWin;
+      try {
+        const stops: number[] = [];
+        for (let r = 0; r < REEL_COUNT; r++) stops.push(pickStop(reels[r].length));
+        const window = buildWindow(reels, stops);
+        const wins = evaluateWindow(window, bet);
+        const totalWin = wins.reduce((s, w) => s + w.payout, 0);
+        balance += totalWin;
 
-      resolve({
-        spinId: nextSpinId(),
-        bet,
-        reelStops: stops,
-        window,
-        wins,
-        totalWin,
-        newBalance: balance,
-      });
+        resolve({
+          spinId: nextSpinId(),
+          bet,
+          reelStops: stops,
+          window,
+          wins,
+          totalWin,
+          newBalance: balance,
+        });
+      } catch (err) {
+        // Refund the charged bet so server balance stays consistent
+        balance += bet;
+        reject(err instanceof Error ? err : new Error(String(err)));
+      }
     }, fakeLatencyMs());
   });
 }

@@ -1,6 +1,5 @@
 import { REEL_COUNT, ROW_COUNT, GAP, PADDING, MAX_SYMBOL_SIZE } from '../config/constants';
 
-// For responsiveness, computes the largest square symbol size that fits the grid inside the wrapper.
 export function computeSymbolSize(wrap: HTMLElement): number {
   const availW = wrap.clientWidth  || window.innerWidth  * 0.65;
   const availH = wrap.clientHeight || window.innerHeight * 0.90;

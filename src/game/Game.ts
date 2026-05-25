@@ -70,7 +70,7 @@ export class Game {
     this.controls.setBalance(server.getBalance());
   }
 
-  // Visual spin and server call run in parallel; reels settle once the response lands.
+  // Spin and fetch run in parallel; reels settle once response lands.
   private async handleSpin(): Promise<void> {
     if (this.busy) return;
     this.busy = true;
@@ -82,7 +82,7 @@ export class Game {
 
       const bet = this.controls.getBet();
 
-      // Client-side balance guard — avoids spinning the reels only to show an error.
+      // avoid spinning reels only to show an error
       if (server.getBalance() < bet) {
         this.controls.setWinText('Low balance');
         return;
@@ -90,18 +90,9 @@ export class Game {
 
       this.controls.setBalance(server.getBalance() - bet);
 
-      // Spin starts immediately; server response arrives while reels are already cruising.
       this.reelSet.startSpin();
 
-      let response;
-      try {
-        response = await server.getResponseData(bet);
-      } catch (err) {
-        await this.reelSet.stopAt(new Array(REEL_COUNT).fill(0));
-        this.controls.setBalance(server.getBalance());
-        this.controls.setWinText('Server error');
-        return;
-      }
+      const response = await server.getResponseData(bet);
 
       if (response.error) {
         await this.reelSet.stopAt(new Array(REEL_COUNT).fill(0));
@@ -123,7 +114,10 @@ export class Game {
         this.controls.setWinText('');
       }
     } catch (err) {
-      console.error('Unhandled spin error:', err);
+      console.error('Spin failed:', err);
+      await this.reelSet.stopAt(new Array(REEL_COUNT).fill(0));
+      this.controls.setBalance(server.getBalance());
+      this.controls.setWinText('Server error');
     } finally {
       this.busy = false;
       this.controls.setBusy(false);

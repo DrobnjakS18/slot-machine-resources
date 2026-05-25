@@ -12,7 +12,6 @@ import { SYMBOLS, SYMBOL_IDS, SymbolId } from "../config/symbols";
 
 export type SymbolTextureMap = Record<SymbolId, Texture>;
 
-// Generates a RenderTexture for every symbol at the given size and returns the map.
 export function buildSymbolTextures(
   app: Application,
   symbolSize: number,
@@ -24,7 +23,6 @@ export function buildSymbolTextures(
   return map;
 }
 
-// Draws one symbol card into a RenderTexture.
 function renderOne(
   renderer: Renderer,
   meta: (typeof SYMBOLS)[SymbolId],
@@ -37,14 +35,13 @@ function renderOne(
   const w = size - cardMargin * 2;
   const h = size - cardMargin * 2;
 
-  // Main card fill.
   const card = new Graphics();
   card.lineStyle({ width: 2, color: 0x000000, alpha: 0.85 });
   card.beginFill(meta.color);
   card.drawRoundedRect(cardMargin, cardMargin, w, h, radius);
   card.endFill();
 
-  // Top highlight (light source from top-left).
+  // top-left light source highlight
   const highlight = new Graphics();
   highlight.beginFill(0xffffff, 0.24);
   highlight.drawRoundedRect(
@@ -56,13 +53,12 @@ function renderOne(
   );
   highlight.endFill();
 
-  // Bottom half darkened for a beveled look.
+  // bottom half darkened for a beveled look.     
   const bevel = new Graphics();
   bevel.beginFill(0x000000, 0.22);
   bevel.drawRoundedRect(cardMargin, cardMargin + h * 0.52, w, h * 0.48, radius);
   bevel.endFill();
 
-  // Label
   const isMultiChar = !meta.isWild && meta.label.length > 1;
   const fontSize = meta.isWild
     ? size * 0.22
@@ -86,7 +82,6 @@ function renderOne(
     dropShadowBlur: 2,
   });
 
-  // Label positioning to the center
   const label = new Text(meta.label, style);
   label.anchor.set(0.5, 0.5);
   label.x = size / 2;
@@ -94,7 +89,6 @@ function renderOne(
   
   container.addChild(card, bevel, highlight, label);
 
-  // Bake container into GPU texture
   const rt = RenderTexture.create({
     width: size,
     height: size,

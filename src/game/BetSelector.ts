@@ -81,13 +81,12 @@ export function bindControls(): Controls {
   let spinHandler: (() => void) | null = null;
   spinBtn.addEventListener('click', () => spinHandler?.());
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && !spinBtn.disabled) {
+    if (e.code === 'Space' && !spinBtn.disabled && !betPopupOverlay.classList.contains('open')) {
       e.preventDefault();
       spinHandler?.();
     }
   });
 
-  // Speed up / slow down controls.
   const speedDownBtn = document.getElementById('speed-down-btn') as HTMLButtonElement;
   const speedUpBtn = document.getElementById('speed-up-btn') as HTMLButtonElement;
   const speedLabelEl = document.getElementById('speed-label') as HTMLSpanElement;
@@ -146,7 +145,7 @@ export function bindControls(): Controls {
     onSpin: (handler) => { spinHandler = handler; },
     onSpeedChange: (handler) => {
       speedHandler = handler;
-      refreshSpeed(); // fire once with the default
+      refreshSpeed();
     },
   };
 }
