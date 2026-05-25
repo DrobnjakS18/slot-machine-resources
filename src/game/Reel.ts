@@ -1,10 +1,5 @@
-// State machine: idle → accelerating → cruising → decelerating → bouncing → idle.
-//   decelerate: slides past landing by DECEL_OVERSHOOT_ROWS
-//   bounce: backOut curve walks back, briefly overshooting in reverse
-//
-// position: float index into reelstrip. Integer = symbol at row 0; fractional = scroll progress.
-//
-// rowCount + 2 sprite slots (one buffer above, one below); textures swapped each frame.
+// State machine: idle → accel → cruise → decel (overshoots) → bounce (backOut) → idle.
+// position: float reelstrip index; integer = symbol at row 0. rowCount+2 sprite slots, textures swapped per frame.
 
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import { SymbolId } from '../config/symbols';
@@ -12,17 +7,16 @@ import { SymbolTextureMap } from './SymbolTextures';
 
 type ReelState = 'idle' | 'accelerating' | 'cruising' | 'decelerating' | 'bouncing';
 
-const CRUISE_SPEED = 32;            // rows per second during cruise
-const ACCEL_TIME = 0.22;            // seconds
-const MIN_CRUISE_TIME = 0.35;       // minimum cruise before a stop is accepted
-const DECEL_TIME = 0.55;            // seconds
-const DECEL_OVERSHOOT_ROWS = 0.55;  // reel slides this far PAST its landing during decel
-const BOUNCE_TIME = 0.36;           // seconds
-const BOUNCE_BACK_S = 3.0;          // backOut easing overshoot intensity
-const MIN_SPIN_ROWS = 18;           // minimum total rows traveled per spin
+const CRUISE_SPEED = 32;            // rows/sec
+const ACCEL_TIME = 0.22;
+const MIN_CRUISE_TIME = 0.35;       // must cruise this long before accepting a stop
+const DECEL_TIME = 0.55;
+const DECEL_OVERSHOOT_ROWS = 0.55;  // slides past landing before bounce pulls back
+const BOUNCE_TIME = 0.36;
+const BOUNCE_BACK_S = 3.0;          // backOut overshoot intensity
+const MIN_SPIN_ROWS = 18;           // min travel per spin
 
-// backOut(t): eases 0→past 1→1. Used in reverse: reel slides back from overshoot,
-// briefly passing the landing target before settling.
+// eases 0→overshoot→1; applied from overshoot back to landing for the mechanical thunk.
 function backOut(t: number, s: number): number {
   return 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2);
 }
@@ -44,7 +38,7 @@ export class Reel {
   private tweenDuration = 0;
   private tweenFromPos = 0;
   private tweenToPos = 0;
-  private landingTarget = 0;      
+  private landingTarget = 0;
   private cruiseElapsed = 0;
   private pendingStop: number | null = null;
 
@@ -92,7 +86,7 @@ export class Reel {
 
   startSpin(): void {
     if (this.state !== 'idle') return;
-    this.pendingStop = null;
+    if (this.pendingStop === null) this.pendingStop = null;
     this.state = 'accelerating';
     this.velocity = 0;
     this.tweenT = 0;
@@ -107,7 +101,6 @@ export class Reel {
     });
   }
 
-  // deltaTime in seconds
   update(deltaTime: number): void {
     switch (this.state) {
       case 'idle':
@@ -128,7 +121,7 @@ export class Reel {
       case 'cruising': {
         this.position += this.velocity * deltaTime;
         this.cruiseElapsed += deltaTime;
-        // Begin deceleration as soon as we've cruised long enough AND have a target.
+        // start decel once cruised long enough and target known
         if (this.cruiseElapsed >= MIN_CRUISE_TIME && this.pendingStop !== null) {
           this.beginDeceleration(this.pendingStop);
         }
@@ -156,7 +149,7 @@ export class Reel {
         const eased = backOut(t, BOUNCE_BACK_S);
         this.position = this.tweenFromPos + (this.tweenToPos - this.tweenFromPos) * eased;
         if (t >= 1) {
-          this.position = this.landingTarget; // clamp to exact integer landing
+          this.position = this.landingTarget;
           this.state = 'idle';
           this.velocity = 0;
           const r = this.resolveStop;
@@ -169,11 +162,10 @@ export class Reel {
     this.refreshSprites();
   }
 
-  // Landing target: next position >= current + MIN_SPIN_ROWS congruent to finalStop mod stripLen.
+  // Finds next position >= current+MIN_SPIN_ROWS that lands on finalStop mod stripLen.
   private beginDeceleration(finalStop: number): void {
     const stripLen = this.strip.length;
     const current = this.position;
-    // Find the next position >= current + MIN_SPIN_ROWS that is congruent to finalStop mod stripLen.
     let target = Math.ceil(current + MIN_SPIN_ROWS);
     const targetMod = ((target % stripLen) + stripLen) % stripLen;
     const delta = ((finalStop - targetMod) % stripLen + stripLen) % stripLen;
@@ -187,14 +179,13 @@ export class Reel {
     this.tweenToPos = target + DECEL_OVERSHOOT_ROWS;
   }
 
-  // Slot 0 is the buffer above row 0 (offsetFromTop = -1).
-  // frac scrolls everything downward as position advances.
+  // Slot 0 is buffer above row 0; frac shifts sprites downward as position advances.
   private refreshSprites(): void {
     const stripLen = this.strip.length;
     const intPos = Math.floor(this.position);
     const frac = this.position - intPos;
     for (let i = 0; i < this.sprites.length; i++) {
-      const offsetFromTop = i - 1; // slot 0 is above row 0 → offset -1
+      const offsetFromTop = i - 1; // slot 0 → offset -1 (above row 0)
       const stripIndex = ((intPos + offsetFromTop) % stripLen + stripLen) % stripLen;
       const symbol = this.strip[stripIndex];
       const sprite = this.sprites[i];

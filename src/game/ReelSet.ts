@@ -1,7 +1,4 @@
-// Orchestrates the 5 reels: layout, staggered start, single ticker.
-//
-// Per reel: spin starts with an 80ms stagger so the cabinet has a wave feel.
-// On stop, we resolve each reel to its assigned stop with another 300ms stagger.
+// 5-reel orchestrator: wave-staggered start/stop, single shared ticker.
 
 import { Application, Container, Graphics, Ticker } from 'pixi.js';
 import { REEL_COUNT, ROW_COUNT } from '../config/constants';
@@ -33,7 +30,6 @@ export class ReelSet {
     this.symbolSize = args.symbolSize;
     this.container = new Container();
 
-    // Frame.
     const frame = new Graphics();
     const innerW = REEL_COUNT * args.symbolSize + (REEL_COUNT - 1) * REEL_GAP;
     const innerH = ROW_COUNT * args.symbolSize;
@@ -45,7 +41,6 @@ export class ReelSet {
     frame.endFill();
     this.container.addChild(frame);
 
-    // Build reels.
     for (let r = 0; r < REEL_COUNT; r++) {
       const reel = new Reel({
         reelIndex: r,
@@ -61,7 +56,7 @@ export class ReelSet {
       this.reels.push(reel);
     }
 
-    // Single ticker drives all reels.
+    // Single ticker drives all reels.     
     this.ticker = args.app.ticker;
     this.ticker.add(this.tick, this);
   }
@@ -71,13 +66,12 @@ export class ReelSet {
     for (const reel of this.reels) reel.update(deltaTime);
   }
 
-  // Speed multiplier affects spin speed and stagger timing
+  // Speed multiplier affects spin speed and stagger timing 
   setSpeedMultiplier(m: number): void {
     if (!Number.isFinite(m) || m <= 0 || this.spinning) return;
     this.speedMultiplier = m;
   }
-
-  // Starts all reels with a staggered delay to give the cabinet a wave feel.
+ 
   async startSpin(): Promise<void> {
     this.spinning = true;
     const stagger = START_STAGGER_MS / this.speedMultiplier;
@@ -87,8 +81,7 @@ export class ReelSet {
     }
   }
 
-  // Stops each reel at the given stop index, with a per-reel stagger.
-  // Resolves when ALL reels have come to rest.
+  // Resolves when all reels are at rest.
   async stopAt(stops: number[]): Promise<void> {
     if (stops.length !== this.reels.length) {
       throw new Error(`stopAt: expected ${this.reels.length} stops, got ${stops.length}`);

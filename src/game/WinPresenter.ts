@@ -1,5 +1,4 @@
-// Highlights winning cells and draws the payline path on top of the reel set.
-// Pulses on/off so the player can absorb multiple coinciding wins one by one,
+// Pulses winning cell highlights and payline paths over the reel set.
 
 import { Container, Graphics, Ticker } from 'pixi.js';
 import { Win } from '../server/evaluator';
@@ -24,7 +23,6 @@ export class WinPresenter {
     this.ticker.add(this.tick, this);
   }
 
-  // Stores the win list and starts the pulse animation from the beginning.
   show(wins: Win[]): void {
     this.wins = wins;
     this.elapsedMs = 0;
@@ -40,16 +38,14 @@ export class WinPresenter {
     if (this.wins.length === 0) return;
     this.elapsedMs += this.ticker.deltaMS;
     const phase = (this.elapsedMs % PULSE_PERIOD_MS) / PULSE_PERIOD_MS;
-    // 0 → 1 → 0 sine wave gives a smooth pulse.
     const intensity = 0.45 + 0.55 * Math.sin(phase * Math.PI);
     this.redraw(intensity);
   }
 
-  // Draws cell highlight rects and connecting payline paths at the given alpha intensity.
+  //Draws cell highlight rects and connecting payline paths at the given alpha intensity. 
   private redraw(intensity: number): void {
     this.overlay.clear();
     for (const win of this.wins) {
-      // Filled cell highlight (pulses in and out).
       for (const [r, row] of win.positions) {
         const c = this.reelSet.cellPosition(r, row);
         this.overlay.lineStyle({ width: 3, color: win.paylineColor, alpha: intensity });
