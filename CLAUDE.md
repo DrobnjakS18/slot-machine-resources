@@ -85,12 +85,12 @@ The PAR sheet. 7 symbols, each with:
 | Symbol | Label | Color       | 3× | 4×  | 5×  |
 |--------|-------|-------------|-----|-----|-----|
 | WD     | WILD  | `#ffd166`   | —   | —   | —   |
-| A      | A     | `#ef476f`   | 10  | 50  | 200 |
-| K      | K     | `#f78c6b`   | 8   | 30  | 150 |
-| Q      | Q     | `#06d6a0`   | 5   | 20  | 100 |
-| J      | J     | `#118ab2`   | 3   | 12  | 60  |
-| TEN    | 10    | `#9b5de5`   | 2   | 8   | 40  |
-| NINE   | 9     | `#6c757d`   | 2   | 6   | 30  |
+| A      | A     | `#ef476f`   | 4   | 16  | 50  |
+| K      | K     | `#f78c6b`   | 3   | 12  | 33  |
+| Q      | Q     | `#06d6a0`   | 2   | 8   | 25  |
+| J      | J     | `#118ab2`   | 2   | 8   | 17  |
+| TEN    | 10    | `#9b5de5`   | 1   | 4   | 17  |
+| NINE   | 9     | `#6c757d`   | 1   | 4   | 10  |
 
 WD is wild (substitutes for any non-wild symbol). Adding a symbol = edit this file only.
 
@@ -106,7 +106,7 @@ WD is wild (substitutes for any non-wild symbol). Adding a symbol = edit this fi
 | 4  | Caret  | `#9b5de5` | 2,1,0,1,2 (∧ shape)              |
 
 ### `src/server/randomNumberGenerator.ts`
-Thin wrapper around `Math.random()`. `pickStop(reelIndex, reelLen)` first checks an optional override hook (the debug/test seam), then falls back to random. Fisher-Yates shuffle lives here. **The swap point:** to use production-grade randomness, replace `Math.random()` in this file only — nothing else changes.
+Thin wrapper around `Math.random()`. `pickStop(reelLen)` returns a random stop index. Fisher-Yates shuffle lives here. **The swap point:** to use production-grade randomness, replace `Math.random()` in this file only — nothing else changes.
 
 ### `src/server/reelBuilder.ts`
 Builds reelstrips from frequency tables: for each reel, push N copies of each symbol (N = frequency), then Fisher-Yates shuffle once. The shuffled array is the stable reelstrip; individual spins just pick a stop index.
