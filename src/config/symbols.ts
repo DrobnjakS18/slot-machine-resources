@@ -1,11 +1,11 @@
 export type SymbolId =
-  | 'WD'  
-  | 'A'   
-  | 'K'   
-  | 'Q'   
-  | 'J'   
-  | 'TEN' 
-  | 'NINE'; 
+  | 'WD'
+  | 'A'
+  | 'K'
+  | 'Q'
+  | 'J'
+  | 'TEN'
+  | 'NINE';
 
 export type SymbolMeta = {
   id: SymbolId;
@@ -13,7 +13,7 @@ export type SymbolMeta = {
   color: number; 
   textColor: number;
   frequency: [number, number, number, number, number];
-  pays: [number, number, number];   // Pays for [3, 4, 5] of a kind on a payline, in credits per credit bet.
+  pays: [number, number, number];   // [3×, 4×, 5×] credits per credit-bet
   isWild?: boolean;
 };
 

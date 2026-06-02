@@ -1,5 +1,3 @@
-// Builds the reelstrips from the configured symbol frequencies.
-
 import { REEL_COUNT } from '../config/constants';
 import { SYMBOLS, SYMBOL_IDS, SymbolId } from '../config/symbols';
 import { shuffle } from './randomNumberGenerator';

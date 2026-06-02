@@ -1,7 +1,4 @@
-// Payline definitions as data. Each payline is an ordered list of {reel, row}
-// cells, one per reel, walked left-to-right by the evaluator.
-//
-// Adding/removing a payline = edit this file, no code changes.
+// Payline definitions — ordered {reel, row} cells per reel, walked left-to-right.
 
 type Cell = { reel: number; row: number };
 
