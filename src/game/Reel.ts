@@ -86,7 +86,7 @@ export class Reel {
 
   startSpin(): void {
     if (this.state !== 'idle') return;
-    this.pendingStop = null;
+    if (this.resolveStop === null) this.pendingStop = null;
     this.state = 'accelerating';
     this.velocity = 0;
     this.tweenT = 0;

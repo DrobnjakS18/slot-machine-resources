@@ -171,6 +171,7 @@ function renderPaytableHtml(): string {
     `<span class="col-pay">3×</span>` +
     `<span class="col-pay">4×</span>` +
     `<span class="col-pay">5×</span>` +
+    `<span class="col-pay">6×</span>` +
     `</div>`
   );
 
@@ -184,6 +185,7 @@ function renderPaytableHtml(): string {
         `<span class="col-pay">${s.pays[0]}</span>` +
         `<span class="col-pay">${s.pays[1]}</span>` +
         `<span class="col-pay">${s.pays[2]}</span>` +
+        `<span class="col-pay">${s.pays[3]}</span>` +
         `</div>`
       );
     }

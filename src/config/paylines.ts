@@ -9,7 +9,7 @@ export type Payline = {
   cells: Cell[]; // length === REEL_COUNT
 };
 
-// Standard 5x3 set: 3 horizontals + V + ^.
+// Standard 6x3 set: 3 horizontals + V + ^.
 export const PAYLINES: Payline[] = [
   {
     id: 0,
@@ -21,6 +21,7 @@ export const PAYLINES: Payline[] = [
       { reel: 2, row: 0 },
       { reel: 3, row: 0 },
       { reel: 4, row: 0 },
+      { reel: 5, row: 0 },
     ],
   },
   {
@@ -33,6 +34,7 @@ export const PAYLINES: Payline[] = [
       { reel: 2, row: 1 },
       { reel: 3, row: 1 },
       { reel: 4, row: 1 },
+      { reel: 5, row: 1 },
     ],
   },
   {
@@ -45,6 +47,7 @@ export const PAYLINES: Payline[] = [
       { reel: 2, row: 2 },
       { reel: 3, row: 2 },
       { reel: 4, row: 2 },
+      { reel: 5, row: 2 },
     ],
   },
   {
@@ -57,6 +60,7 @@ export const PAYLINES: Payline[] = [
       { reel: 2, row: 2 },
       { reel: 3, row: 1 },
       { reel: 4, row: 0 },
+      { reel: 5, row: 1 },
     ],
   },
   {
@@ -69,6 +73,7 @@ export const PAYLINES: Payline[] = [
       { reel: 2, row: 0 },
       { reel: 3, row: 1 },
       { reel: 4, row: 2 },
+      { reel: 5, row: 1 },
     ],
   },
 ];
