@@ -1,4 +1,4 @@
-export const REEL_COUNT = 6;
+export const REEL_COUNT = 4;
 export const ROW_COUNT = 3;
 export const MIN_MATCH = 3;          
 export const STARTING_BALANCE = 1000;

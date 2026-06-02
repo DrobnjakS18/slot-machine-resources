@@ -20,8 +20,6 @@ export const PAYLINES: Payline[] = [
       { reel: 1, row: 0 },
       { reel: 2, row: 0 },
       { reel: 3, row: 0 },
-      { reel: 4, row: 0 },
-      { reel: 5, row: 0 },
     ],
   },
   {
@@ -33,8 +31,6 @@ export const PAYLINES: Payline[] = [
       { reel: 1, row: 1 },
       { reel: 2, row: 1 },
       { reel: 3, row: 1 },
-      { reel: 4, row: 1 },
-      { reel: 5, row: 1 },
     ],
   },
   {
@@ -46,8 +42,6 @@ export const PAYLINES: Payline[] = [
       { reel: 1, row: 2 },
       { reel: 2, row: 2 },
       { reel: 3, row: 2 },
-      { reel: 4, row: 2 },
-      { reel: 5, row: 2 },
     ],
   },
   {
@@ -59,8 +53,6 @@ export const PAYLINES: Payline[] = [
       { reel: 1, row: 1 },
       { reel: 2, row: 2 },
       { reel: 3, row: 1 },
-      { reel: 4, row: 0 },
-      { reel: 5, row: 1 },
     ],
   },
   {
@@ -72,8 +64,6 @@ export const PAYLINES: Payline[] = [
       { reel: 1, row: 1 },
       { reel: 2, row: 0 },
       { reel: 3, row: 1 },
-      { reel: 4, row: 2 },
-      { reel: 5, row: 1 },
     ],
   },
 ];
