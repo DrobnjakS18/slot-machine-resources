@@ -1,5 +1,5 @@
-export const REEL_COUNT = 4;
-export const ROW_COUNT = 3;
+export const REEL_COUNT = 5;
+export const ROW_COUNT = 2;
 export const MIN_MATCH = 3;          
 export const STARTING_BALANCE = 1000;
 export const BET_VALUES = [1, 2, 5, 10, 25, 50, 100] as const;
