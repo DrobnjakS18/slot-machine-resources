@@ -21,6 +21,7 @@ export const PAYLINES: Payline[] = [
       { reel: 2, row: 0 },
       { reel: 3, row: 0 },
       { reel: 4, row: 0 },
+      { reel: 5, row: 0 },
     ],
   },
   // {
@@ -44,6 +45,7 @@ export const PAYLINES: Payline[] = [
       { reel: 2, row: 1 },
       { reel: 3, row: 1 },
       { reel: 4, row: 1 },
+      { reel: 5, row: 1 },
     ],
   },
   // {

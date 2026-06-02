@@ -268,7 +268,7 @@ details summary {
 
 .paytable-table {
   display: grid;
-  grid-template-columns: 1fr 30px 30px 30px;
+  grid-template-columns: 1fr 30px 30px 30px 30px;
   gap: 0;
   margin-bottom: 6px;
   font-size: clamp(11px, 1.1vw, 13px);
