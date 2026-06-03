@@ -56,9 +56,7 @@ export class ReelSet {
       this.reels.push(reel);
     }
 
-    // Single ticker drives all reels.     
     this.ticker = args.app.ticker;
-    this.ticker.add(this.tick, this);
   }
 
   private tick(): void {
@@ -74,6 +72,7 @@ export class ReelSet {
  
   async startSpin(): Promise<void> {
     this.spinning = true;
+    this.ticker.add(this.tick, this);
     const stagger = START_STAGGER_MS / this.speedMultiplier;
     for (let i = 0; i < this.reels.length; i++) {
       const reel = this.reels[i];
@@ -100,6 +99,7 @@ export class ReelSet {
       );
     }
     await Promise.all(promises);
+    this.ticker.remove(this.tick, this);
     this.spinning = false;
   }
 
