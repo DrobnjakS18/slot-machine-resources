@@ -79,11 +79,6 @@ export class Reel {
 
     this.refreshSprites();
   }
-
-  get isIdle(): boolean {
-    return this.state === 'idle';
-  }
-
   startSpin(): void {
     if (this.state !== 'idle') return;
     if (this.resolveStop === null) this.pendingStop = null;
